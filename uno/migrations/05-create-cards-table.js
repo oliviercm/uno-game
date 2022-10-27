@@ -35,7 +35,7 @@ module.exports = {
           "SKIP",
           "REVERSE",
           "WILD_CARD",
-          "DRAW_4"),
+          "DRAW_FOUR"),
         allowNull: false,
       },
     });
