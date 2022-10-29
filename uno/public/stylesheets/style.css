@@ -66,9 +66,12 @@ body {
   height: 150px;
   text-align: center;
   font-size: 150px;
-  color: blue;
+  color: rgba(248, 218, 39, 0.89);
+  text-shadow: -1px 1px 0 #000,
+				  1px 1px 0 #000,
+				 1px -1px 0 #000;
+				
   /* font-family: verdana; */
-  font-family: "Bree Serif";
 }
 
 #formContainer {
@@ -81,15 +84,18 @@ body {
 
 form {
   border: 1px solid black;
-  background-image: url('public/assets/Wild.png');
-  height: 500px;
-  width: 300px;
+  background-image: url('/assets/Wild.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  height: 550px;
+  width: 380px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   align-content: space-around;
   row-gap: 20px;
+  font-family: "Bree Serif";
 }
 
 input[type=text], input[type=password] {
@@ -106,7 +112,11 @@ a {
 }
 
 #l1 {
-  color: blue;
+  color: rgba(248, 218, 39, 0.89);
   font-family: verdana;
   font-size: 80px; 
+  text-shadow: -1px 1px 0 #000,
+				  1px 1px 0 #000,
+				 1px -1px 0 #000;
+				
 } 
