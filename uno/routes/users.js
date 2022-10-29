@@ -67,9 +67,7 @@ router.post("/", async (req, res, next) => {
     // Create user
     await UserManager.createUser(username, password, email);
 
-    return res.status(200).json({
-      success: true,
-    });
+    return res.status(201).send();
   } catch(e) {
     next(e);
   }
