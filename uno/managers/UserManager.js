@@ -42,7 +42,7 @@ class UserManager {
     try {
       const getUserAndOptionsByUserId = new pgp.PreparedStatement({
         name: "get-user-and-options-by-user-id",
-        text: "SELECT user_id, email, music_enabled FROM users INNER JOIN user_options USING(user_id) WHERE user_id = $1",
+        text: "SELECT user_id, username, email, music_enabled FROM users INNER JOIN user_options USING(user_id) WHERE user_id = $1",
       });
       const user = await db.oneOrNone(getUserAndOptionsByUserId, [id]);
       if (!user) {
