@@ -14,6 +14,10 @@ router.get("/:userId", async (req, res, next) => {
       userId,
     } = req.params;
 
+    if (isNaN(userId)) {
+      throw new ApiClientError(`'${userId}' is not a valid user ID.`);
+    }
+
     // Fetch user
     const user = await UserManager.getUserById(userId);
     if (!user) {
