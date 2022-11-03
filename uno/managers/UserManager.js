@@ -53,6 +53,25 @@ class UserManager {
       throw e;
     }
   }
+
+  async loginUser(username, password) {
+    try {
+      const getUserIdAndPasswordByUsername = new pgp.PreparedStatement({
+        name: "get-user-id-and-password-by-username",
+        text: "SELECT user_id, password FROM users WHERE username = $1",
+      });
+      const user = await db.oneOrNone(getUserIdAndPasswordByUsername, [username]);
+      if (!user) {
+        return null;
+      }
+      if (!await PasswordHasher.verify(password, user.password)) {
+        return null;
+      }
+      return await this.getUserById(user.user_id);
+    } catch(e) {
+      throw e;
+    }
+  }
 }
 
 module.exports = new UserManager();
