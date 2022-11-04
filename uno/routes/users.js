@@ -3,6 +3,25 @@ const router = express.Router();
 const UserManager = require("../managers/UserManager");
 const ApiClientError = require("../errors/ApiClientError");
 const ApiNotFoundError = require("../errors/ApiNotFoundError");
+const ApiUnauthorizedError = require("../errors/ApiUnauthorizedError");
+const passport = require("../middleware/passport");
+
+/**
+ * GET /api/users/current
+ * Retrieve currently logged in user.
+ */
+router.get("/current", passport.session(), async (req, res, next) => {
+  try {
+    if (!req.user) {
+      throw new ApiUnauthorizedError("Not logged in.");
+    }
+    return res.status(200).json({
+      user: req.user,
+    });
+  } catch(e) {
+    next(e);
+  }
+});
 
 /**
  * GET /api/users/:userId

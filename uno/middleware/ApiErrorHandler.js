@@ -1,4 +1,6 @@
 const ApiClientError = require("../errors/ApiClientError");
+const ApiUnauthorizedError = require("../errors/ApiUnauthorizedError");
+const ApiForbiddenError = require("../errors/ApiForbiddenError");
 const ApiNotFoundError = require("../errors/ApiNotFoundError");
 
 module.exports = function (err, req, res, next) {
@@ -11,6 +13,18 @@ module.exports = function (err, req, res, next) {
   switch (true) {
     case err instanceof ApiClientError: {
       res.status(400).json({
+        error: err.message,
+      });
+      break;
+    }
+    case err instanceof ApiUnauthorizedError: {
+      res.status(401).json({
+        error: err.message,
+      });
+      break;
+    }
+    case err instanceof ApiForbiddenError: {
+      res.status(403).json({
         error: err.message,
       });
       break;
