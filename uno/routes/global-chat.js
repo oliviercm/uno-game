@@ -17,9 +17,8 @@ router.post("/", passport.session(), async (req, res, next) => {
     }
 
     // Verify request body has all required properties and has correct format
-    const MAX_MESSAGE_LENGTH = 512;
     const schema = Joi.object({
-      message: Joi.string().max(MAX_MESSAGE_LENGTH).required(),
+      message: Joi.string().max(512).required(),
     });
     const validated = await schema.validateAsync(req.body);
 
