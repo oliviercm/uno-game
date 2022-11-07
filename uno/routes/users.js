@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const Joi = require("joi");
 const UserManager = require("../managers/UserManager");
 const ApiClientError = require("../errors/ApiClientError");
 const ApiNotFoundError = require("../errors/ApiNotFoundError");
@@ -15,6 +16,7 @@ router.get("/current", passport.session(), async (req, res, next) => {
     if (!req.user) {
       throw new ApiUnauthorizedError("Not logged in.");
     }
+
     return res.status(200).json({
       user: req.user,
     });
@@ -60,36 +62,16 @@ router.get("/:userId", async (req, res, next) => {
  */
 router.post("/", async (req, res, next) => {
   try {
-    const {
-      username,
-      password,
-      email,
-      ...rest
-    } = req.body;
-  
     // Verify request body has all required properties and has correct format
-    const restKeys = Object.keys(rest);
-    if (restKeys.length > 0) {
-      throw new ApiClientError(`"${restKeys[0]}" is not a valid option.`);
-    }
-    if (!username) {
-      throw new ApiClientError(`"username" is required.`);
-    }
-    if (username.length < 6 || username.length > 32) {
-      throw new ApiClientError(`"username" must be between 6 and 32 characters.`);
-    }
-    if (!password) {
-      throw new ApiClientError(`"password" is required.`);
-    }
-    if (!email) {
-      throw new ApiClientError(`"email" is required.`);
-    }
-    if (!/^[^@]+@[^@]+$/.test(email)) {
-      throw new ApiClientError(`"email" must be an email address.`);
-    }
+    const schema = Joi.object({
+      username: Joi.string().alphanum().min(6).max(32).required(),
+      password: Joi.string().min(6).max(64).required(),
+      email: Joi.string().email().required(),
+    });
+    const validated = await schema.validateAsync(req.body);
 
     // Create user
-    await UserManager.createUser(username, password, email);
+    await UserManager.createUser(validated.username, validated.password, validated.email);
 
     return res.status(201).send();
   } catch(e) {
