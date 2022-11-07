@@ -68,7 +68,7 @@ router.post("/", async (req, res, next) => {
       password: Joi.string().min(6).max(64).required(),
       email: Joi.string().email().required(),
     });
-    const validated = await schema.validateAsync(rqe.body);
+    const validated = await schema.validateAsync(req.body);
 
     // Create user
     await UserManager.createUser(validated.username, validated.password, validated.email);
