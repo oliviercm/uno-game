@@ -16,15 +16,18 @@ router.post("/", passport.session(), async (req, res, next) => {
       throw new ApiUnauthorizedError("Not logged in.");
     }
 
+    // Verify request body has all required properties and has correct format
     const MAX_MESSAGE_LENGTH = 512;
     const schema = Joi.object({
       message: Joi.string().max(MAX_MESSAGE_LENGTH).required(),
     });
     const validated = await schema.validateAsync(req.body);
 
+    // Send global chat message
     const username = req.user.username;
     const message = validated.message;
     GlobalChatManager.sendMessage(username, message);
+
     return res.status(200).send();
   } catch(e) {
     next(e);

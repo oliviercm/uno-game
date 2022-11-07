@@ -16,6 +16,7 @@ router.get("/current", passport.session(), async (req, res, next) => {
     if (!req.user) {
       throw new ApiUnauthorizedError("Not logged in.");
     }
+
     return res.status(200).json({
       user: req.user,
     });
