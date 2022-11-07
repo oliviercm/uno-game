@@ -1,3 +1,4 @@
+const JoiValidationError = require("joi").ValidationError;
 const ApiClientError = require("../errors/ApiClientError");
 const ApiUnauthorizedError = require("../errors/ApiUnauthorizedError");
 const ApiForbiddenError = require("../errors/ApiForbiddenError");
@@ -11,6 +12,15 @@ module.exports = function (err, req, res, next) {
   console.error(err);
 
   switch (true) {
+    case err instanceof JoiValidationError: {
+      const errorMessage = err.details
+        .map((detail) => detail.message)
+        .join(", ");
+      res.status(400).json({
+        error: errorMessage,
+      });
+      break;
+    }
     case err instanceof ApiClientError: {
       res.status(400).json({
         error: err.message,

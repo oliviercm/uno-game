@@ -9,8 +9,6 @@ if (process.env.NODE_ENV === "development") {
 }
 
 const app = express();
-const session = require("express-session");
-const passport = require("./middleware/passport");
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
@@ -23,16 +21,13 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 // use session authentication
-app.use(session({
-  secret: process.env.USER_SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-}));
+app.use(require("./middleware/session"));
 
 // routes
 app.use("/", require("./routes/index"));
 app.use("/api/users", require("./routes/users"), require("./middleware/ApiErrorHandler"));
 app.use("/api/login", require("./routes/login"), require("./middleware/ApiErrorHandler"));
+app.use("/api/global-chat", require("./routes/global-chat"), require("./middleware/ApiErrorHandler"));
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
