@@ -10,14 +10,11 @@ class GlobalChatManager {
       console.log(`[Global Chat Manager] Removed socket ID ${socket.id} (${reason}). # of connected sockets: ${Object.keys(this.connectedSockets).length}`);
     });
     console.log(`[Global Chat Manager] Added socket ID ${socket.id}, established by user ${socket.request.session.passport.user.username}. # of connected sockets: ${Object.keys(this.connectedSockets).length}`);
-  };
+  }
 
-  sendMessage(username, content) {
+  sendGlobalChatMessage(username, content) {
     for (const socketId in this.connectedSockets) {
-      this.connectedSockets[socketId].emit("message", JSON.stringify({
-        username: username,
-        content: content,
-      }));
+      this.connectedSockets[socketId].emit("message", { username: username, content: content });
     }
     console.log(`[Global Chat Manager] Emitted global chat message "${content}" to ${Object.keys(this.connectedSockets).length} connected sockets.`);
   }
