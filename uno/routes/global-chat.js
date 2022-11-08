@@ -25,7 +25,7 @@ router.post("/", passport.session(), async (req, res, next) => {
     // Send global chat message
     const username = req.user.username;
     const message = validated.message;
-    GlobalChatManager.sendGlobalChatMessage(username, message);
+    GlobalChatManager.emitGlobalChatMessage(username, message);
 
     return res.status(200).send();
   } catch(e) {

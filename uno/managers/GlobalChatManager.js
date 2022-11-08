@@ -12,7 +12,7 @@ class GlobalChatManager {
     console.log(`[Global Chat Manager] Added socket ID ${socket.id}, established by user ${socket.request.session.passport.user.username}. # of connected sockets: ${Object.keys(this.connectedSockets).length}`);
   }
 
-  sendGlobalChatMessage(username, message) {
+  emitGlobalChatMessage(username, message) {
     for (const socketId in this.connectedSockets) {
       this.connectedSockets[socketId].emit("message", { username: username, message: message });
     }

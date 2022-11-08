@@ -26,6 +26,7 @@ app.use(require("./middleware/session"));
 // routes
 app.use("/", require("./routes/index"));
 app.use("/api/users", require("./routes/users"), require("./middleware/ApiErrorHandler"));
+app.use("/api/games", require("./routes/games"), require("./middleware/ApiErrorHandler"));
 app.use("/api/login", require("./routes/login"), require("./middleware/ApiErrorHandler"));
 app.use("/api/global-chat", require("./routes/global-chat"), require("./middleware/ApiErrorHandler"));
 
