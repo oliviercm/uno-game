@@ -12,6 +12,8 @@ module.exports = {
           model: "users",
           key: "user_id",
         },
+        onDelete: "CASCADE",
+        onUpdate: "CASCADE",
       },
       music_enabled: {
         type: Sequelize.BOOLEAN,

@@ -1,0 +1,21 @@
+head
+  meta(charset='UTF-8')
+  link(rel='stylesheet' href='stylesheets/style.css')
+  title Home
+.unoHeader
+  span#header1 U
+  span#header2 N
+  span#header3 O
+#login.bodyContainer
+  #bgBlur
+    form#loginForm
+      #loginHeaderContainer.formHeaderContainer
+        #lHeader
+          b Sign in
+      #inputContainer
+        input(type='text' placeholder='Enter Username' required='terms' name='uname')
+        input(type='password' placeholder='Enter Password' required='terms' name='pword')
+        button.loginButton(type='submit') &gt;
+      a.createAccount(href='/registration')
+        | Don't have an account?
+        | Create one!

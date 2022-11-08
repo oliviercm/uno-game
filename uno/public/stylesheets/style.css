@@ -240,7 +240,6 @@ body {
 
 
 form {
-  background-size: contain;
   background-repeat: no-repeat;
   background-size: cover;
   max-width: 380px;
