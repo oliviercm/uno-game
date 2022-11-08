@@ -6,11 +6,10 @@ module.exports = (server) => {
       require("../middleware/session")(socket.request, {}, next);
     })
     .use((socket, next) => {
-      if (socket?.request?.session?.passport?.user) {
-        next();
-      } else {
-        next(new Error("Not logged in."));
+      if (!socket?.request?.session?.passport?.user) {
+        return next(new Error("Not logged in."));
       }
+      return next();
     })
     .on("connection", socket => {
       console.log(`User connected to /global-chat/ socket: ${JSON.stringify({
