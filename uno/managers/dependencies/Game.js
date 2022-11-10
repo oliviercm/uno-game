@@ -63,13 +63,13 @@ class Game {
       cards,
       ...restOfGameState
     } = gameState;
-    const lastCardInDiscardPile = cards
+    const largestOrderInDiscardPile = cards
       .filter(card => card.location === "DISCARD")
-      .reduce((largest, current) => {
-        if (!largest || current > largest) {
-          return current;
+      .reduce((largestOrder, currentCard) => {
+        if (!largestOrder || currentCard.order > largestOrder) {
+          return currentCard.order;
         } else {
-          return largest;
+          return largestOrder;
         }
       }, null);
     const sanitizedGameState = {
@@ -78,7 +78,7 @@ class Game {
         if (card.user_id === userId) {
           return card;
         }
-        if (card.location === "DISCARD" && card.order === lastCardInDiscardPile) {
+        if (card.location === "DISCARD" && card.order === largestOrderInDiscardPile) {
           return card;
         }
         // Otherwise, the card's card_id (color and value can be determined from card_id), color, and value should be hidden to the user.
