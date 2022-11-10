@@ -63,13 +63,22 @@ class Game {
       cards,
       ...restOfGameState
     } = gameState;
+    const lastCardInDiscardPile = cards
+      .filter(card => card.location === "DISCARD")
+      .reduce((largest, current) => {
+        if (!largest || current > largest) {
+          return current;
+        } else {
+          return largest;
+        }
+      }, null);
     const sanitizedGameState = {
       cards: cards.map(card => {
         // The user can only see their own cards, and the top card of the discard pile.
         if (card.user_id === userId) {
           return card;
         }
-        if (card.location === "DISCARD" && card.order === 0) {
+        if (card.location === "DISCARD" && card.order === lastCardInDiscardPile) {
           return card;
         }
         // Otherwise, the card's card_id (color and value can be determined from card_id), color, and value should be hidden to the user.
