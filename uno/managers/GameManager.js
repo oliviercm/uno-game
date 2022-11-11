@@ -9,7 +9,11 @@ class GameManager {
 
   async getGameByGameId(gameId) {
     if (this.games[gameId]) {
-      return this.games[gameId];
+      if (this.games[gameId].deleted) {
+        delete this.games[gameId];
+      } else {
+        return this.games[gameId];
+      }
     }
 
     const getGameByGameId = new pgp.PreparedStatement({

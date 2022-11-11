@@ -30,6 +30,84 @@ router.post("/", passport.session(), async (req, res, next) => {
 });
 
 /**
+ * POST /api/games/:gameId/start
+ * 
+ * Starts a game. Requesting user must have created the game (must be the host).
+ */
+router.post("/:gameId/start", passport.session(), async (req, res, next) => {
+  try {
+    if (!req.user) {
+      throw new ApiUnauthorizedError("Not logged in.");
+    }
+
+    // Retrieve game instance
+    const game = await GameManager.getGameByGameId(req.params.gameId);
+    if (!game) {
+      throw new ApiNotFoundError(`Game with ID '${req.params.gameId}' does not exist.`);
+    }
+
+    // Start game, throws error if requesting user is not host or game is already started
+    await game.startGame(req.user.user_id);
+
+    return res.status(200).send();
+  } catch(e) {
+    next(e);
+  }
+});
+
+/**
+ * POST /api/games/:gameId/join
+ * 
+ * Joins a game. Game must not be in progress.
+ */
+ router.post("/:gameId/join", passport.session(), async (req, res, next) => {
+  try {
+    if (!req.user) {
+      throw new ApiUnauthorizedError("Not logged in.");
+    }
+
+    // Retrieve game instance
+    const game = await GameManager.getGameByGameId(req.params.gameId);
+    if (!game) {
+      throw new ApiNotFoundError(`Game with ID '${req.params.gameId}' does not exist.`);
+    }
+
+    // Join game
+    await game.addPlayer(req.user.user_id);
+
+    return res.status(200).send();
+  } catch(e) {
+    next(e);
+  }
+});
+
+/**
+ * POST /api/games/:gameId/leave
+ * 
+ * Leaves a game. If game is in progress, user forfeits.
+ */
+ router.post("/:gameId/leave", passport.session(), async (req, res, next) => {
+  try {
+    if (!req.user) {
+      throw new ApiUnauthorizedError("Not logged in.");
+    }
+
+    // Retrieve game instance
+    const game = await GameManager.getGameByGameId(req.params.gameId);
+    if (!game) {
+      throw new ApiNotFoundError(`Game with ID '${req.params.gameId}' does not exist.`);
+    }
+
+    // Leave game
+    await game.removePlayer(req.user.user_id);
+
+    return res.status(200).send();
+  } catch(e) {
+    next(e);
+  }
+});
+
+/**
  * POST /api/games/:gameId/chat
  * 
  * Sends a chat message to a game.
