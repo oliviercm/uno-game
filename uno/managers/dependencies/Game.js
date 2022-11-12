@@ -334,6 +334,7 @@ class Game {
       ]);
     });
     this.emitGameEvent({ type: "PLAYER_JOINED", user_id: userId });
+    this.emitGameStates();
   }
 
   async removePlayer(userId) {
@@ -357,6 +358,7 @@ class Game {
         this.emitGameEvent({ type: "PLAYER_FORFEIT", user_id: userId });
         // TODO: Re-build play order
         // TODO: Migrate host
+        // TODO: Discard player's cards
       } else {
         // If game has not started, the user is removed
         await t.none(new pgp.PreparedStatement({
@@ -373,6 +375,7 @@ class Game {
       }
     });
     this.emitGameEvent({ type: "PLAYER_LEFT", user_id: userId });
+    this.emitGameStates();
   }
 
   async deleteGame(transaction) {
