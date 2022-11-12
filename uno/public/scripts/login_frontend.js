@@ -21,7 +21,7 @@ function login_execute(){
     fetch('/api/login', login_info)
     .then((response) => {
         if(response.status == 200){
-            document.location.href = '/registration'
+            document.location.href = '/lobby'
         }
         else{
             document.location.reload();
