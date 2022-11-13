@@ -1,7 +1,8 @@
 module.exports = (server) => {
+  const { Server } = require("socket.io");
   // Global chat socket
   const GlobalChatManager = require("../managers/GlobalChatManager");
-  require("socket.io")(server, { path: "/global-chat/" })
+  new Server().listen(server, { path: "/global-chat/" })
     .use((socket, next) => {
       require("../middleware/session")(socket.request, {}, next);
     })
@@ -20,7 +21,7 @@ module.exports = (server) => {
     });
   // Games socket
   const GameManager = require("../managers/GameManager");
-  require("socket.io")(server, { path: "/games/" })
+  new Server().listen(server, { path: "/games/" })
     .use((socket, next) => {
       require("../middleware/session")(socket.request, {}, next);
     })
