@@ -9,12 +9,28 @@ function addMessage () {
     if(input.value === '') {
         return
     } else {
-        message_container.innerHTML += `
+
+        var message = {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body:JSON.stringify({
+                "message": input.value
+            })
+        }
+        fetch('/api/global-chat', message)
+        .then((response)=>{
+            console.log(response)
+        })
+    //     message_container.innerHTML += `
       
-            <p> ${input.value}<p>
+    //         <p> ${input.value}<p>
    
-        `;
-    input.value = '';
-    input.focus();
+    //     `;
+    // input.value = '';
+    // input.focus();
     }
 }
