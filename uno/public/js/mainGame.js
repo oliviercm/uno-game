@@ -76,3 +76,10 @@ function getRandomDegree() {
     let num = Math.floor(Math.random() * 20);
     return num * (Math.round(Math.random()) ? 1 : -1);
 }
+
+//TODO
+//ALL EXPOSED METHODS FOR CURRENt FRONT END NEEDED:
+//Player drawing a card (need card info)
+//Opponent drawing a card (don't need card info)
+//Player playing a card (need card info)
+//Opponent playing a card (need card info)
