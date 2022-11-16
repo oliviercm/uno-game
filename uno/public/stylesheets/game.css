@@ -1,0 +1,366 @@
+@import url("https://fonts.googleapis.com/css2?family=Lobster&display=swap");
+
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+embed,
+figure,
+figcaption,
+footer,
+header,
+hgroup,
+menu,
+nav,
+output,
+ruby,
+section,
+summary,
+time,
+mark,
+audio,
+video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+}
+
+/* HTML5 display-role reset for older browsers */
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section {
+    display: block;
+}
+
+body {
+    line-height: 1;
+}
+
+ol,
+ul {
+    list-style: none;
+}
+
+blockquote,
+q {
+    quotes: none;
+}
+
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+    content: '';
+    content: none;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/**
+* END CSS RESET
+**/
+
+html {
+    --distance: 1rem;
+}
+
+body {
+    width: 100%;
+    height: 100%;
+}
+
+.gameScreenContainer {
+    background-image: url('/assets/Table_2.png');
+    background-size: cover;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 35px;
+}
+
+.deck,.discard{
+    border:.2rem solid yellow;
+    border-radius: 1rem;
+    color: yellow;
+    font-size: 2rem;
+    font-family: Lobster;
+    text-align: center;
+    max-width: 388px;
+    max-height: 562px;
+    width: 12.93vh;
+    height: 18.73vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+.reshuffle{
+    z-index: 1;
+    text-decoration: none;
+    border-radius: 2rem;
+    border: 0.12vw solid black;
+    background-color: rgba(0, 0, 0, .5);
+    font-family: Lobster;
+    color: yellow;
+    font-size: 1.5rem;
+    top: 10%;
+    justify-content: center;
+}
+
+.reshuffle:hover{
+    cursor: pointer;
+    filter: brightness(85%);
+    transition: .2s;
+}
+
+.deckContainer{
+    position: absolute;
+    max-width: 388px;
+    max-height: 562px;
+    width: 12.93vh;
+    height: 18.73vh;
+    display: flex;
+    flex-direction: row;
+}
+
+.hand {
+    position: fixed;
+    display: flex;
+    justify-content: center;
+}
+
+#myHand {
+    border:.2rem solid yellow;
+    border-bottom: 0px;
+    border-radius: 1rem;
+    border-bottom-left-radius: 0%;
+    border-bottom-right-radius: 0%;
+    width: 50%;
+    left: 50%;
+    margin-left: -25%;
+    height: 22vh;
+    bottom: 0px;
+}
+
+#opponentHand1,#opponentHand3{
+    border:.2rem solid yellow;
+    border-radius: 1rem;
+    width: 21vh;
+    height: 50vh;
+    top: 50vh;
+    margin-top: -25vh;
+    flex-direction: column;
+}
+
+#opponentHand1 {
+    left: 0px;
+    border-left: 0px;
+    border-top-left-radius: 0%;
+    border-bottom-left-radius: 0%;
+}
+
+#opponentHand2 {
+    border:.2rem solid yellow;
+    border-top: 0px;
+    border-radius: 1rem;
+    border-top-left-radius: 0%;
+    border-top-right-radius: 0%;
+    left: 50%;
+    margin-left: -15%;
+    width: 30%;
+    height: 21vh;
+    top: 0px;
+}
+
+#opponentHand3 {
+    right: 0px;
+    border-right: 0px;
+    border-top-right-radius: 0%;
+    border-bottom-right-radius: 0%;
+}
+
+.card {
+    background-repeat: no-repeat;
+    background-size: contain;
+    padding: 2rem;
+    max-width: 388px;
+    max-height: 562px;
+    width: 12.93vh;
+    height: 18.73vh;
+    border-radius: .5rem;
+    box-shadow: 4px 4px 12px 2px rgba(0, 0, 0, 0.60);
+    transition: 0.2s;
+}
+
+.deckCard{
+    min-width: 100%;
+    z-index: 2;
+    box-shadow: 2px 4px 8px 1px rgba(0, 0, 0, 0.20);
+}
+
+.discardCard{
+    position: absolute;
+    box-shadow: 2px 4px 8px 2px rgba(0, 0, 0, 0.20);
+}
+
+.dealCard{
+    position: absolute;
+    background-color: green;
+    z-index: 3;
+}
+
+.addCard{
+    margin-top: 200px;
+}
+
+
+.deckCard,
+.rightCard,
+.leftCard,
+.topCard {
+    background-image: url('/assets/Deck.png');
+}
+
+.leftCard {
+    margin-left: 4vh;
+    transform: rotate(90deg);
+}
+
+.topCard {
+    margin-top: 10px;
+    transform: rotate(180deg);
+}
+
+.rightCard {
+    margin-left: 4vh;
+    transform: rotate(270deg);
+}
+
+.myCard {
+    margin-top: 10px;
+}
+
+.myCard:not(:first-child) {
+    margin-left: calc(21*-.5vh);
+}
+
+.myCard:hover,
+.myCard:focus-within {
+    transform: translatey(-2vh);
+}
+
+.myCard:hover~.myCard,
+.myCard:focus-within~.myCard {
+    transform: translatex(calc(21*.5vh));
+}
+
+.myCard:hover {
+    filter: brightness(85%);
+    transition: .5s ease;
+    cursor: pointer;
+}
+
+.deckCard:not(:first-child){
+    margin-left: -99.7%;
+}
+
+.deckCard:is(:last-child):hover{
+    filter: brightness(85%);
+}
+
+.rightCard:not(:first-child),
+.leftCard:not(:first-child) {
+    margin-top: calc(3*-3vh);
+}
+
+.topCard:not(:last-child) {
+    margin-right: calc(3*-1vh);
+}
