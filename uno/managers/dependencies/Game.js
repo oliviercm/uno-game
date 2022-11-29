@@ -40,6 +40,17 @@ class Game {
   }
 
   /**
+   * Emits sanitized game state to all connected users/sockets.
+   */
+  async emitGameStateToConnectedUsers() {
+    const gameStatesToEmit = await this.getGameStatesForConnectedUsers();
+    for (const socketId in this.connectedSockets) {
+      const socket = this.connectedSockets[socketId];
+      socket.emit("game_state", gameStatesToEmit[socket.request.session.passport.user.user_id]);
+    }
+  }
+
+  /**
    * Returns the sanitized game state (cards that the user shouldn't see are hideen) for a user.
    * This should only be used when emitting game state to a single user (only occurs during initial socket connection).
    */
@@ -303,7 +314,7 @@ class Game {
         });
       }));
       // TODO: Give users random play orders
-      this.emitGameStates();
+      this.emitGameStateToConnectedUsers();
     });
   }
 
@@ -334,7 +345,7 @@ class Game {
       ]);
     });
     this.emitGameEvent({ type: "PLAYER_JOINED", user_id: userId });
-    this.emitGameStates();
+    this.emitGameStateToConnectedUsers();
   }
 
   async removePlayer(userId) {
@@ -375,7 +386,7 @@ class Game {
       }
     });
     this.emitGameEvent({ type: "PLAYER_LEFT", user_id: userId });
-    this.emitGameStates();
+    this.emitGameStateToConnectedUsers();
   }
 
   async deleteGame(transaction) {
