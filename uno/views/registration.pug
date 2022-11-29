@@ -1,0 +1,20 @@
+doctype html
+head
+  meta(charset='UTF-8')
+  link(rel='stylesheet' href='stylesheets/style.css')
+  title Home
+.unoHeader
+  span#header1 U
+  span#header2 N
+  span#header3 O
+#registration.bodyContainer
+  #bgBlur
+    form#registrationForm
+      #registrationHeaderContainer.formHeaderContainer
+        #lHeader
+          b Register
+      #inputContainer
+        input(type='text' placeholder='Enter Username' required='terms' name='uname')
+        input(type='password' placeholder='Enter Password' required='terms' name='pword')
+        input(type='password' placeholder='Confirm Password' required='terms' name='pwordConfirm')
+        button.loginButton(type='submit') &gt;

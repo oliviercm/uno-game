@@ -1,8 +1,349 @@
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+@import url("https://fonts.googleapis.com/css2?family=Bowlby+One+SC&family=Luckiest+Guy&family=Bree+Serif&family=Josefin+Sans&family=Rubik:wght@500&family=Fira+Sans+Condensed:wght@199&display=swap");
+
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+embed,
+figure,
+figcaption,
+footer,
+header,
+hgroup,
+menu,
+nav,
+output,
+ruby,
+section,
+summary,
+time,
+mark,
+audio,
+video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
 }
 
-a {
-  color: #00B7FF;
+/* HTML5 display-role reset for older browsers */
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section {
+  display: block;
+}
+
+body {
+  line-height: 1;
+}
+
+ol,
+ul {
+  list-style: none;
+}
+
+blockquote,
+q {
+  quotes: none;
+}
+
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+  content: '';
+  content: none;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/**
+* END CSS RESET
+**/
+
+body {
+  height: 100%;
+  width: 100%;
+}
+
+.bodyContainer {
+  width: 100%;
+  height: 100vh;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+#registration {
+  background-image: url('/assets/UnoBackground2.png');
+}
+
+#login {
+  background-image: url('/assets/UnoBackground1.png');
+}
+
+#bgBlur {
+  background: rgba(255, 255, 255, 0);
+  width: 100%;
+  height: 100vh;
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.unoHeader {
+  position: absolute;
+  font-size: 80px;
+  z-index: 1;
+  margin: 4%;
+}
+
+#header1 {
+  text-align: center;
+  font-size: 7vw;
+  color: rgba(248, 218, 39, 1);
+  font-family: Bowlby One SC;
+  text-shadow:
+    0.01em 0 white,
+    0 0.01em white,
+    -0.01em 0 white,
+    0 -0.01em white,
+    -0.01em -0.01em white,
+    -0.01em 0.01em white,
+    0.01em -0.01em white,
+    0.01em 0.01em white,
+    0px 16px 70px rgba(0, 0, 0, 0.4),
+    0px 8px 24px rgba(0, 0, 0, 0.8);
+}
+
+#header2 {
+  text-align: center;
+  font-size: 7vw;
+  color: #0098dc;
+  font-family: Bowlby One SC;
+  text-shadow:
+    0.01em 0 white,
+    0 0.01em white,
+    -0.01em 0 white,
+    0 -0.01em white,
+    -0.01em -0.01em white,
+    -0.01em 0.01em white,
+    0.01em -0.01em white,
+    0.01em 0.01em white,
+    0px 16px 70px rgba(0, 0, 0, 0.4),
+    0px 8px 24px rgba(0, 0, 0, 0.8);
+}
+
+#header3 {
+  text-align: center;
+  font-size: 7vw;
+  color: #ea323c;
+  font-family: Bowlby One SC;
+  text-shadow:
+    0.01em 0 white,
+    0 0.01em white,
+    -0.01em 0 white,
+    0 -0.01em white,
+    -0.01em -0.01em white,
+    -0.01em 0.01em white,
+    0.01em -0.01em white,
+    0.01em 0.01em white,
+    0px 16px 70px rgba(0, 0, 0, 0.4),
+    0px 8px 24px rgba(0, 0, 0, 0.8);
+
+}
+
+
+form {
+  background-repeat: no-repeat;
+  background-size: cover;
+  max-width: 380px;
+  max-height: 550px;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-content: space-around;
+  gap: 20px;
+  border-radius: 9%;
+  box-shadow: 0px 16px 70px rgba(0, 0, 0, 0.2),
+    0px 8px 24px rgba(0, 0, 0, 0.8);
+}
+
+#loginForm{
+  background-image: url('/assets/Wild.png');
+}
+
+#registrationForm{
+  background-image: url('/assets/Wild_DraW.png');
+}
+
+.formHeaderContainer {
+  align-self: center;
+  height: min(10vh, 70px);
+  line-height: min(10vh, 70px);
+  width: 70%;
+  margin-top: 8vh;
+}
+
+#lHeader {
+  text-align: center;
+  color: rgba(248, 218, 39, 1);
+  font-family: Luckiest Guy;
+  font-size: 400%;
+  text-shadow:
+    0.01em 0 darkblue,
+    0 0.01em darkblue,
+    -0.01em 0 darkblue,
+    0 -0.01em darkblue,
+    -0.01em -0.01em darkblue,
+    -0.01em 0.01em darkblue,
+    0.01em -0.01em darkblue,
+    0.01em 0.01em darkblue,
+    0px 16px 40px rgba(0, 0, 0, 0.2),
+    0px 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+#inputContainer {
+  margin-top: min(4vh, 60px);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-content: space-around;
+}
+
+input[type=text],
+input[type=password] {
+  width: 75%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  border-radius: 10px;
+  display: inline-block;
+  box-sizing: border-box;
+}
+
+.loginButton {
+  position: relative;
+  text-decoration: none;
+  border-radius: 50%;
+  max-width: 60px;
+  max-height: 60px;
+  width: 3.5vw;
+  height: 3.5vw;
+  line-height: 0.1vw;
+  border: 0.12vw solid black;
+  background-color: #ffffff;
+  font-family: "Fira Sans Condensed", serif;
+  color: #274b69;
+  font-size: min(6vh, 60px);
+  top: 10%;
+  justify-content: center;
+}
+
+.loginButton:hover {
+  background: rgba(133, 161, 193, 0.4);
+  cursor: pointer;
+}
+
+.createAccount {
+  width: 42%;
+  margin-top: min(8vh, 70px);
+  margin-right: 4px;
+  text-decoration: none;
+  text-align: center;
+  color: #0098dc;
+  padding: 0;
+  font-size: min(2vh, 20px);
+  font-family: Bree Serif;
+}
+
+.createAccount:hover {
+  color: white;
 }
