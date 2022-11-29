@@ -123,66 +123,51 @@ class Game {
   }
 
   async getGame(transaction) {
-    const game = await (transaction ?? db).one(new pgp.PreparedStatement({
-      name: "get-game",
-      text: "SELECT started, ended FROM games WHERE game_id = $1",
-    }), [
+    const game = await (transaction ?? db).one("SELECT started, ended FROM games WHERE game_id = $1", [
       this.id,
     ]);
     return game;
   }
 
   async getGameUsers(transaction) {
-    const gameUsers = await (transaction ?? db).manyOrNone(new pgp.PreparedStatement({
-      name: "get-game-users",
-      text: `
-        SELECT user_id, username, play_order, state, is_host
-          FROM game_users
-          INNER JOIN users USING(user_id)
-          WHERE game_id = $1`,
-    }), [
+    const gameUsers = await (transaction ?? db).manyOrNone(`
+      SELECT user_id, username, play_order, state, is_host
+        FROM game_users
+        INNER JOIN users USING(user_id)
+        WHERE game_id = $1`, [
       this.id,
     ]);
     return gameUsers;
   }
 
   async getGameCards(transaction) {
-    const gameCards = await (transaction ?? db).manyOrNone(new pgp.PreparedStatement({
-      name: "get-game-cards",
-      text: `
-        SELECT card_id, color, \"value\", location, \"order\", user_id
-          FROM game_cards
-          INNER JOIN cards USING(card_id)
-          WHERE game_id = $1`,
-    }), [
+    const gameCards = await (transaction ?? db).manyOrNone(`
+      SELECT card_id, color, \"value\", location, \"order\", user_id
+        FROM game_cards
+        INNER JOIN cards USING(card_id)
+        WHERE game_id = $1`, [
       this.id,
     ]);
     return gameCards;
   }
 
   async getDeckCards(transaction) {
-    const deckCards = await (transaction ?? db).manyOrNone(new pgp.PreparedStatement({
-      name: "get-deck-cards",
-      text: `
-        SELECT card_id, color, \"value\", location, \"order\", user_id
-          FROM game_cards
-          INNER JOIN cards USING(card_id)
-          WHERE game_id = $1 AND location = 'DECK'`,
-    }), [
+    const deckCards = await (transaction ?? db).manyOrNone(`
+      SELECT card_id, color, \"value\", location, \"order\", user_id
+        FROM game_cards
+        INNER JOIN cards USING(card_id)
+        WHERE game_id = $1 AND location = 'DECK'`, [
       this.id,
     ]);
     return deckCards;
   }
 
   async getUserHandCards(userId, transaction) {
-    const deckCards = await (transaction ?? db).manyOrNone(new pgp.PreparedStatement({
-      name: "get-user-hand-cards",
-      text: `
-        SELECT card_id, color, \"value\", location, \"order\", user_id
-          FROM game_cards
-          INNER JOIN cards USING(card_id)
-          WHERE game_id = $1 AND user_id = $2 AND location = 'HAND'`,
-    }), [
+    const deckCards = await (transaction ?? db).manyOrNone(`
+      SELECT card_id, color, \"value\", location, \"order\", user_id
+        FROM game_cards
+        INNER JOIN cards USING(card_id)
+        WHERE game_id = $1 AND user_id = $2 AND location = 'HAND'`, [
       this.id,
       userId,
     ]);
@@ -230,15 +215,9 @@ class Game {
       throw new ApiClientError("Game has not started or is ended.");
     }
     // If deck is empty
-    if (await (transaction ?? db).one(new pgp.PreparedStatement({
-      name: "get-deck-card-count",
-      text: `SELECT COUNT(*) FROM game_cards WHERE game_id = $1 AND location = 'DECK'`,
-    }), [this.id]) === 0) {
+    if (await (transaction ?? db).one(`SELECT COUNT(*) FROM game_cards WHERE game_id = $1 AND location = 'DECK'`, [this.id]) === 0) {
       // Merge discard into deck
-      await (transaction ?? db).none(new pgp.PreparedStatement({
-        name: "merge-discard-into-deck",
-        text: `UPDATE game_cards SET location = 'DECK' WHERE game_id = $1 AND location = 'DISCARD'`,
-      }), [this.id]);
+      await (transaction ?? db).none(`UPDATE game_cards SET location = 'DECK' WHERE game_id = $1 AND location = 'DISCARD'`, [this.id]);
       // Shuffle deck
       await this.shuffleDeck(transaction);
     }
@@ -252,23 +231,20 @@ class Game {
       }
       // Replenish deck if needed and deal card
       await this.mergeDiscardIntoDeckIfDeckEmpty(t);
-      await t.none(new pgp.PreparedStatement({
-        name: "deal-card",
-        text: `
-          UPDATE game_cards
-            SET
-              location = 'HAND',
-              user_id = $2,
-              "order" = 1 + COALESCE(
-                (SELECT MAX("order") FROM game_cards WHERE game_id = $1 AND user_id = $2 AND location = 'HAND'), -1
-              )
-            WHERE
-              game_id = $1 AND
-              location = 'DECK' AND
-              "order" = (
-                SELECT MAX("order") FROM game_cards WHERE game_id = $1 AND location = 'DECK'
-              )`,
-      }), [
+      await t.none(`
+        UPDATE game_cards
+          SET
+            location = 'HAND',
+            user_id = $2,
+            "order" = 1 + COALESCE(
+              (SELECT MAX("order") FROM game_cards WHERE game_id = $1 AND user_id = $2 AND location = 'HAND'), -1
+            )
+          WHERE
+            game_id = $1 AND
+            location = 'DECK' AND
+            "order" = (
+              SELECT MAX("order") FROM game_cards WHERE game_id = $1 AND location = 'DECK'
+            )`, [
         this.id,
         userId,
       ]);
@@ -301,10 +277,7 @@ class Game {
         throw new ApiClientError("At least 2 players are required to start the game.");
       }
       // Start game
-      await t.none(new pgp.PreparedStatement({
-        name: "start-game",
-        text: `UPDATE games SET started = TRUE WHERE game_id = $1`,
-      }), [
+      await t.none(`UPDATE games SET started = TRUE WHERE game_id = $1`, [
         this.id,
       ]);
       await this.shuffleDeck(t);
@@ -313,9 +286,21 @@ class Game {
           return this.dealCard(user.user_id, t);
         });
       }));
-      // TODO: Give users random play orders
-      this.emitGameStateToConnectedUsers();
+      // Assign random starting order for users
+      const randomOrder = Math.floor(Math.random() * gameUsers.length);
+      for (let i = 0; i < gameUsers.length; i++) {
+        gameUsers[i].play_order = (randomOrder + i) % gameUsers.length;
+      }
+      await Promise.all(gameUsers.map(gameUser => {
+        return t.none(`UPDATE game_users SET play_order = $3 WHERE game_id = $1 AND user_id = $2`, [
+          this.id,
+          gameUser.user_id,
+          gameUser.play_order,
+        ]);
+      }));
     });
+    this.emitGameEvent({ type: "GAME_STARTED" });
+    this.emitGameStateToConnectedUsers();
   }
 
   async addPlayer(userId) {
@@ -336,10 +321,7 @@ class Game {
         throw new ApiClientError("The game is full.");
       }
       // Add player to game
-      await t.none(new pgp.PreparedStatement({
-        name: "insert-game-user",
-        text: `INSERT INTO game_users(game_id, user_id, play_order, state, is_host) VALUES ($1, $2, -1, 'PLAYING', FALSE)`,
-      }), [
+      await t.none(`INSERT INTO game_users(game_id, user_id, play_order, state, is_host) VALUES ($1, $2, -1, 'PLAYING', FALSE)`, [
         this.id,
         userId,
       ]);
@@ -359,10 +341,7 @@ class Game {
       // Remove player from game
       if (await this.isGameInProgress()) {
         // If game is in progress, the user forfeits
-        await t.none(new pgp.PreparedStatement({
-          name: "forfeit-game-user",
-          text: `UPDATE game_users SET state = 'LOST' WHERE game_id = $1 AND user_id = $2`,
-        }), [
+        await t.none(`UPDATE game_users SET state = 'LOST' WHERE game_id = $1 AND user_id = $2`, [
           this.id,
           userId,
         ]);
@@ -372,10 +351,7 @@ class Game {
         // TODO: Discard player's cards
       } else {
         // If game has not started, the user is removed
-        await t.none(new pgp.PreparedStatement({
-          name: "delete-game-user",
-          text: `DELETE FROM game_users WHERE game_id = $1 AND user_id = $2`,
-        }), [
+        await t.none(`DELETE FROM game_users WHERE game_id = $1 AND user_id = $2`, [
           this.id,
           userId,
         ]);
@@ -391,22 +367,13 @@ class Game {
 
   async deleteGame(transaction) {
     const dg = async t => {
-      await t.none(new pgp.PreparedStatement({
-        name: "delete-game-cards",
-        text: `DELETE FROM game_cards WHERE game_id = $1`,
-      }), [
+      await t.none(`DELETE FROM game_cards WHERE game_id = $1`, [
         this.id,
       ]);
-      await t.none(new pgp.PreparedStatement({
-        name: "delete-game-users",
-        text: `DELETE FROM game_users WHERE game_id = $1`,
-      }), [
+      await t.none(`DELETE FROM game_users WHERE game_id = $1`, [
         this.id,
       ]);
-      await t.none(new pgp.PreparedStatement({
-        name: "delete-game",
-        text: `DELETE FROM games WHERE game_id = $1`,
-      }), [
+      await t.none(`DELETE FROM games WHERE game_id = $1`, [
         this.id,
       ]);
     };
@@ -455,6 +422,8 @@ class Game {
    *    Additional keys: user_id
    * 
    * GAME_DELETED - All players left before game started.
+   * 
+   * GAME_STARTED - Game has been started by the host.
    */
   emitGameEvent(event) {
     for (const socketId in this.connectedSockets) {
