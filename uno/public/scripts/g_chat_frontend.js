@@ -1,6 +1,12 @@
 const message_container = document.querySelector('.chat-field')
 const messageButton = document.querySelector('.input-button')
 const input = document.querySelector('.input-field-chat')
+const socket = io()
+
+
+socket.on('chat-message', data => {
+    console.log(data)
+})
 
 messageButton.addEventListener('click', addMessage);
 
@@ -23,14 +29,15 @@ function addMessage () {
         }
         fetch('/api/global-chat', message)
         .then((response)=>{
+            console.log("HERE")
             console.log(response)
         })
-    //     message_container.innerHTML += `
+        message_container.innerHTML += `
       
-    //         <p> ${input.value}<p>
+        <p> ${input.value}<p>
    
-    //     `;
-    // input.value = '';
-    // input.focus();
+        `;
+    input.value = '';
+    input.focus();
     }
 }
