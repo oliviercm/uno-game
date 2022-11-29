@@ -143,7 +143,7 @@ class Game {
 
   async getGameCards(transaction) {
     const gameCards = await (transaction ?? db).manyOrNone(`
-      SELECT card_id, color, \"value\", location, \"order\", user_id
+      SELECT card_id, color, "value", location, "order", user_id
         FROM game_cards
         INNER JOIN cards USING(card_id)
         WHERE game_id = $1`, [
@@ -154,7 +154,7 @@ class Game {
 
   async getDeckCards(transaction) {
     const deckCards = await (transaction ?? db).manyOrNone(`
-      SELECT card_id, color, \"value\", location, \"order\", user_id
+      SELECT card_id, color, "value", location, "order", user_id
         FROM game_cards
         INNER JOIN cards USING(card_id)
         WHERE game_id = $1 AND location = 'DECK'`, [
@@ -165,7 +165,7 @@ class Game {
 
   async getUserHandCards(userId, transaction) {
     const deckCards = await (transaction ?? db).manyOrNone(`
-      SELECT card_id, color, \"value\", location, \"order\", user_id
+      SELECT card_id, color, "value", location, "order", user_id
         FROM game_cards
         INNER JOIN cards USING(card_id)
         WHERE game_id = $1 AND user_id = $2 AND location = 'HAND'`, [
@@ -299,7 +299,22 @@ class Game {
           gameUser.play_order,
         ]);
       }));
-      // TODO: Deal card from deck onto discard
+      // Deal card from deck onto discard
+      await t.none(`
+        UPDATE game_cards
+          SET
+            location = 'DISCARD',
+            "order" = 1 + COALESCE(
+              (SELECT MAX("order") FROM game_cards WHERE game_id = $1 AND location = 'DISCARD'), -1
+            )
+          WHERE
+            game_id = $1 AND
+            location = 'DECK' AND
+            "order" = (
+              SELECT MAX("order") FROM game_cards WHERE game_id = $1 AND location = 'DECK'
+            )`, [
+        this.id,
+      ]);
     });
     this.emitGameEvent({ type: "GAME_STARTED" });
     this.emitGameStateToConnectedUsers();
@@ -391,7 +406,7 @@ class Game {
           ]);
         }
         // Discard player's cards
-        await t.none(`UPDATE game_cards SET location = 'DISCARD', \"order\" = -1, user_id = NULL WHERE game_id = $1 AND user_id = $2`, [
+        await t.none(`UPDATE game_cards SET location = 'DISCARD', "order" = -1, user_id = NULL WHERE game_id = $1 AND user_id = $2`, [
           this.id,
           userToRemove.user_id,
         ]);
