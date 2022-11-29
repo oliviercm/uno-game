@@ -63,6 +63,7 @@ class Game {
    * Returns a game state where cards that the given user should not be able to see (other player's cards, the deck, etc.) are hidden.
    */
   sanitizeGameStateForUser(gameState, userId) {
+    // TODO: Don't sanitize cards if game has ended
     const {
       cards,
       ...restOfGameState
@@ -298,6 +299,7 @@ class Game {
           gameUser.play_order,
         ]);
       }));
+      // TODO: Deal card from deck onto discard
     });
     this.emitGameEvent({ type: "GAME_STARTED" });
     this.emitGameStateToConnectedUsers();
@@ -331,26 +333,75 @@ class Game {
   }
 
   async removePlayer(userId) {
+    let forfeited = false;
+    let gameEnded = false;
     await db.tx(async t => {
+      // Check that game is not already ended
+      const game = await this.getGame(t);
+      if (game.ended) {
+        throw new ApiClientError("The game has already ended.");
+      }
       // Check that the user is in game
       const gameUsers = await this.getGameUsers(t);
-      const existingUser = gameUsers.find(user => user.user_id === userId);
-      if (!existingUser) {
+      const userToRemove = gameUsers.find(user => user.user_id === userId);
+      if (!userToRemove) {
         throw new ApiClientError("You are not in this game.");
       }
+      const remainingPlayers = gameUsers.filter(gameUser => gameUser.user_id !== userToRemove.user_id && gameUser.state === "PLAYING");
       // Remove player from game
       if (await this.isGameInProgress()) {
         // If game is in progress, the user forfeits
+        forfeited = true;
         await t.none(`UPDATE game_users SET state = 'LOST' WHERE game_id = $1 AND user_id = $2`, [
           this.id,
           userId,
         ]);
-        this.emitGameEvent({ type: "PLAYER_FORFEIT", user_id: userId });
-        // TODO: Re-build play order
-        // TODO: Migrate host
-        // TODO: Discard player's cards
+        // Recalculate play order
+        const updatedGameUsers = gameUsers.map((gameUser, i) => {
+          const updatedGameUser = {...gameUser};
+          // Forfeiting player gets play_order of -1
+          if (updatedGameUser.user_id === userId) {
+            updatedGameUser.play_order = -1;
+          } else {
+            // For other players, shift play order down where needed
+            if (updatedGameUser.play_order >= userToRemove.play_order) {
+              updatedGameUser.play_order--;
+            }
+          }
+          return updatedGameUser;
+        });
+        await Promise.all(updatedGameUsers.map(updatedGameUser => {
+          return t.none(`UPDATE game_users SET play_order = $3 WHERE game_id = $1 AND user_id = $2`, [
+            this.id,
+            updatedGameUser.user_id,
+            updatedGameUser.play_order,
+          ]);
+        }));
+        // Migrate host
+        if (userToRemove.is_host) {
+          await t.none(`UPDATE game_users SET is_host = FALSE WHERE game_id = $1 AND user_id = $2`, [
+            this.id,
+            userToRemove.user_id,
+          ]);
+          // Select random player from remaining players
+          const newHost = remainingPlayers[Math.floor(Math.random() * remainingPlayers.length)];
+          await t.none(`UPDATE game_users SET is_host = TRUE WHERE game_id = $1 AND user_id = $2`, [
+            this.id,
+            newHost.user_id,
+          ]);
+        }
+        // Discard player's cards
+        await t.none(`UPDATE game_cards SET location = 'DISCARD', \"order\" = -1, user_id = NULL WHERE game_id = $1 AND user_id = $2`, [
+          this.id,
+          userToRemove.user_id,
+        ]);
+        // If one player remaining, remaining player wins by default
+        if (remainingPlayers.length === 1) {
+          await this.endGameWithWinner(t, remainingPlayers[0].user_id);
+          gameEnded = true;
+        }
       } else {
-        // If game has not started, the user is removed
+        // Otherwise game has not started, so the user is simply removed from the game
         await t.none(`DELETE FROM game_users WHERE game_id = $1 AND user_id = $2`, [
           this.id,
           userId,
@@ -361,8 +412,28 @@ class Game {
         }
       }
     });
+    if (forfeited) {
+      this.emitGameEvent({ type: "PLAYER_FORFEIT", user_id: userId });
+    }
     this.emitGameEvent({ type: "PLAYER_LEFT", user_id: userId });
+    if (gameEnded) {
+      this.emitGameEvent({ type: "GAME_ENDED" });
+    }
     this.emitGameStateToConnectedUsers();
+  }
+
+  async endGameWithWinner(transaction, winningUserId) {
+    await transaction.none(`UPDATE game_users SET state = 'WON' WHERE game_id = $1 AND user_id = $2`, [
+      this.id,
+      winningUserId,
+    ]);
+    await transaction.none(`UPDATE game_users SET state = 'LOST' WHERE game_id = $1 AND user_id != $2`, [
+      this.id,
+      winningUserId,
+    ]);
+    await transaction.none(`UPDATE games SET ended = TRUE WHERE game_id = $1`, [
+      this.id,
+    ]);
   }
 
   async deleteGame(transaction) {
@@ -424,6 +495,8 @@ class Game {
    * GAME_DELETED - All players left before game started.
    * 
    * GAME_STARTED - Game has been started by the host.
+   * 
+   * GAME_ENDED - Game has ended due to a player winning.
    */
   emitGameEvent(event) {
     for (const socketId in this.connectedSockets) {
