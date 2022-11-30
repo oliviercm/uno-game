@@ -132,7 +132,7 @@ class Game {
 
   async getGameUsers(transaction) {
     const gameUsers = await (transaction ?? db).manyOrNone(`
-      SELECT user_id, username, play_order, state, is_host
+      SELECT user_id, play_order, state, is_host
         FROM game_users
         INNER JOIN users USING(user_id)
         WHERE game_id = $1`, [
@@ -164,7 +164,7 @@ class Game {
   }
 
   async getUserHandCards(userId, transaction) {
-    const deckCards = await (transaction ?? db).manyOrNone(`
+    const handCards = await (transaction ?? db).manyOrNone(`
       SELECT card_id, color, "value", location, "order", user_id
         FROM game_cards
         INNER JOIN cards USING(card_id)
@@ -172,7 +172,55 @@ class Game {
       this.id,
       userId,
     ]);
-    return deckCards;
+    return handCards;
+  }
+
+  async getCurrentTurnPlayer(transaction) {
+    const currentTurnPlayer = await (transaction ?? db).one(`
+      SELECT user_id, play_order, state, is_host
+        FROM game_users
+        WHERE game_id = $1 AND play_order = 0`, [
+      this.id,
+    ]);
+    return currentTurnPlayer;
+  }
+
+  async getCurrentTurnPlayerCards(transaction) {
+    const handCards = await (transaction ?? db).manyOrNone(`
+      SELECT card_id, color, "value", location, "order", user_id
+        FROM game_cards
+        INNER JOIN cards USING(card_id)
+        WHERE game_id = $1 AND user_id = (SELECT user_id FROM game_users WHERE game_id = $1 AND play_order = 0) AND location = 'HAND'`, [
+      this.id,
+    ]);
+    return handCards;
+  }
+
+  async getTopDiscardCard(transaction) {
+    const topDiscardCard = await (transaction ?? db).oneOrNone(`
+      SELECT card_id, color, "value", location, "order", user_id
+        FROM game_cards
+        INNER JOIN cards USING(card_id)
+        WHERE game_id = $1 AND location = 'DISCARD'
+        ORDER BY "order" DESC LIMIT 1`, [
+      this.id,
+    ]);
+    return topDiscardCard;
+  }
+
+  async setChosenWildcardColor(transaction, color) {
+    await (transaction ?? db).none(`
+      UPDATE games SET chosen_wildcard_color = $2 WHERE game_id = $1`, [
+      this.id,
+      color,
+    ]);
+  }
+
+  async getChosenWildcardColor(transaction) {
+    await (transaction ?? db).one(`
+      SELECT chosen_wildcard_color FROM games WHERE game_id = $1`, [
+      this.id,
+    ]);
   }
 
   async isGameInProgress(transaction) {
@@ -217,8 +265,11 @@ class Game {
     }
     // If deck is empty
     if (await (transaction ?? db).one(`SELECT COUNT(*) FROM game_cards WHERE game_id = $1 AND location = 'DECK'`, [this.id]) === 0) {
-      // Merge discard into deck
-      await (transaction ?? db).none(`UPDATE game_cards SET location = 'DECK' WHERE game_id = $1 AND location = 'DISCARD'`, [this.id]);
+      // Keep top discard card in discard pile
+      const topDiscardCard = await this.getTopDiscardCard(transaction);
+      await (transaction ?? db).none(`UPDATE game_cards SET "order" = 0 WHERE game_id = $1 AND card_id = $2`, [this.id, topDiscardCard.card_id]);
+      // Merge rest of discard into deck
+      await (transaction ?? db).none(`UPDATE game_cards SET location = 'DECK' WHERE game_id = $1 AND location = 'DISCARD' AND card_id != $2`, [this.id, topDiscardCard.card_id]);
       // Shuffle deck
       await this.shuffleDeck(transaction);
     }
@@ -258,6 +309,11 @@ class Game {
       await deal(transaction);
     }
     this.emitGameEvent({ type: "DEALT_CARD", user_id: userId });
+  }
+  
+  async dealCardToCurrentTurnPlayer(transaction) {
+    const currentTurnPlayer = await this.getCurrentTurnPlayer(transaction);
+    await this.dealCard(currentTurnPlayer.user_id, transaction);
   }
 
   async startGame(requestingUserId) {
@@ -300,6 +356,7 @@ class Game {
         ]);
       }));
       // Deal card from deck onto discard
+      // TODO: Redeal card if dealt card is draw 4
       await t.none(`
         UPDATE game_cards
           SET
@@ -315,6 +372,8 @@ class Game {
             )`, [
         this.id,
       ]);
+      // Ensure current turn player can play a card
+      await this.ensureCurrentPlayerCanPlayCard(t);
     });
     this.emitGameEvent({ type: "GAME_STARTED" });
     this.emitGameStateToConnectedUsers();
@@ -373,7 +432,7 @@ class Game {
         ]);
         // Recalculate play order
         const updatedGameUsers = gameUsers.map((gameUser, i) => {
-          const updatedGameUser = {...gameUser};
+          const updatedGameUser = { ...gameUser };
           // Forfeiting player gets play_order of -1
           if (updatedGameUser.user_id === userId) {
             updatedGameUser.play_order = -1;
@@ -437,6 +496,141 @@ class Game {
     this.emitGameStateToConnectedUsers();
   }
 
+  /**
+   * Plays a card, using a chosen color if played card is a wildcard
+   */
+  async playCard(requestingUserId, cardId, chosenWildcardColor) {
+    let gameEnded = false;
+    let playedCard;
+    await db.tx(async t => {
+      // Check that game is in progress
+      if (!await this.isGameInProgress(t)) {
+        throw new ApiClientError("The game must be in progress.");
+      }
+      // Check that requesting user is current turn player
+      const currentTurnPlayer = await this.getCurrentTurnPlayer(t);
+      if (requestingUserId !== currentTurnPlayer.user_id) {
+        throw new ApiClientError("It isn't your turn.");
+      }
+      // Check that requesting user has the card in their hand
+      const currentTurnPlayerCards = await this.getCurrentTurnPlayerCards(t);
+      const cardToPlay = currentTurnPlayerCards.find(card => card.card_id === cardId);
+      if (!cardToPlay) {
+        throw new ApiClientError("You don't have the chosen card in your hand.");
+      }
+      // Check that card is playable
+      const topDiscardCard = await this.getTopDiscardCard(t);
+      const currentChosenWildcardColor = await this.getChosenWildcardColor(t);
+      if (!this.isCardPlayable(cardToPlay, topDiscardCard, currentChosenWildcardColor)) {
+        // Note: This error message is not 100% correct on purpose to keep it short, there are cases where cards can be played without matching colors/values eg. wildcards.
+        throw new ApiClientError("You have to play a card with the same color or value as the top discard card.");
+      }
+      // Update chosen wildcard color
+      if (cardToPlay.color === "BLACK") {
+        if (!chosenWildcardColor) {
+          throw new ApiClientError("You have to select a color when you play a wildcard.");
+        }
+        await this.setChosenWildcardColor(t, chosenWildcardColor);
+      } else {
+        await this.setChosenWildcardColor(t, null);
+      }
+      // Play card
+      await t.none(`
+        UPDATE game_cards
+          SET
+            location = 'DISCARD',
+            "order" = 1 + COALESCE(
+              (SELECT MAX("order") FROM game_cards WHERE game_id = $1 AND location = 'DISCARD'), -1
+            ),
+            user_id = NULL
+          WHERE
+            game_id = $1 AND
+            card_id = $2`, [
+        this.id,
+        cardId,
+      ]);
+      // TODO: Card effects (draw 2, reverse, skip, draw four)
+
+      // Check win condition
+      // If the player only had 1 card before playing the card (meaning the player has 0 cards after playing), the player wins.
+      if (currentTurnPlayerCards.length <= 1) {
+        await endGameWithWinner(t, currentTurnPlayer.user_id);
+        gameEnded = true;
+      } else {
+        // Update play order
+        const gamePlayers = await this.getGameUsers(t);
+        await Promise.all(gamePlayers.map(gamePlayer => {
+          let newOrder = gamePlayer.play_order - 1;
+          if (newOrder < 0) {
+            newOrder = gamePlayers.length - 1;
+          }
+          return t.none(`UPDATE game_users SET play_order = $3 WHERE game_id = $1 AND user_id = $2`, [
+            this.id,
+            gamePlayer.user_id,
+            newOrder,
+          ]);
+        }));
+        // Ensure current turn player can play a card
+        await this.ensureCurrentPlayerCanPlayCard(t);
+      }
+
+      playedCard = cardToPlay;
+    });
+    this.emitGameEvent({ type: "CARD_PLAYED", user_id: requestingUserId, card_color: playedCard.color, card_value: playedCard.value });
+    if (gameEnded) {
+      this.emitGameEvent({ type: "GAME_ENDED" });
+    }
+    this.emitGameStateToConnectedUsers();
+  }
+
+  /**
+   * Ensure that the current turn player can play by drawing cards if needed.
+   */
+  async ensureCurrentPlayerCanPlayCard(transaction) {
+    while (!await this.canCurrentTurnPlayerPlayCard(transaction)) {
+      await this.dealCardToCurrentTurnPlayer(transaction);
+    }
+  }
+
+  /**
+   * Returns whether the passed array of cards contains a playable card
+   */
+  async canCurrentTurnPlayerPlayCard(transaction) {
+    const currentTurnPlayerCards = await this.getCurrentTurnPlayerCards(transaction);
+    const topDiscardCard = await this.getTopDiscardCard(transaction);
+    const chosenWildcardColor = await this.getChosenWildcardColor(transaction);
+
+    for (const card of currentTurnPlayerCards) {
+      if (this.isCardPlayable(card, topDiscardCard, chosenWildcardColor)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  isCardPlayable(card, topDiscardCard, chosenWildcardColor) {
+    // Card is playable if it is a wildcard, or matches the color/value of the top discard card.
+    if (card.color === "BLACK" || card.color === topDiscardCard.color || card.value === topDiscardCard.value) {
+      return true;
+    }
+
+    // If discard card is a wildcard, allow play if it is black (only happens at beginning of game, if the first card is a wildcard).
+    if (topDiscardCard.color === "BLACK") {
+      // Allow play if ithe wildcard doesn't have a color (only happens at beginning of game, if the first card that was dealt automatically is a wildcard).
+      if (!chosenWildcardColor) {
+        return true;
+      } else if (card.color === chosenWildcardColor) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * End the game with a winning user by setting user states to "WON" and "LOST", and setting the game as ended.
+   */
   async endGameWithWinner(transaction, winningUserId) {
     await transaction.none(`UPDATE game_users SET state = 'WON' WHERE game_id = $1 AND user_id = $2`, [
       this.id,
@@ -449,6 +643,7 @@ class Game {
     await transaction.none(`UPDATE games SET ended = TRUE WHERE game_id = $1`, [
       this.id,
     ]);
+    this.emitGameEvent({ type: "GAME_ENDED" });
   }
 
   async deleteGame(transaction) {
