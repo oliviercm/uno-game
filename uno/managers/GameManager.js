@@ -64,7 +64,6 @@ class GameManager {
 
     return newGameId;
   }
-
 }
 
 module.exports = new GameManager();

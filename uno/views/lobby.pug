@@ -1,0 +1,50 @@
+doctype html
+head
+  meta(charset='UTF-8')
+  meta(http-equiv='X-UA-Compatible' content='IE=edge')
+  meta(name='viewport' content='width=device-width, initial-scale=1.0')
+  link(rel='stylesheet' href='/stylesheets/lobby.css')
+
+  title Document
+.game_window
+  //
+    <div class="top">
+    <h1>LOBBY</h1>
+    </div>
+  // <div class="bot">
+  .bot-left-side
+    .container-chat
+      .accordion-content
+        .chat-field
+        br
+        .input-container
+          input.input-field-chat(type='text')
+          button.input-button SEND
+        br
+        br
+      button.accordion CHAT
+      script(src='/socket.io/socket.io.js')
+      script(src='/scripts/chatbox.js')
+      script(src='/scripts/g_chat_frontend.js')
+
+
+  .bot-center
+    .game-list
+      .box-game-list
+        .game-card
+          p test
+        .game-card
+          p test
+        .game-card
+          p test
+        .game-card
+          p test
+        .game-card
+          p test
+        .game-card
+          p test
+        .game-card
+          p test
+  .bot-right-side
+    button.new-game-button CREATE NEW GAME
+  // </div>
