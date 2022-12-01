@@ -40,8 +40,8 @@ socket.on("game_state", (gameState) => {
     console.log(currentUserCards);
 });
 
-socket.on('game_event', (data) => {
-    switch (data.type) {
+socket.on('game_event', (gameEvent) => {
+    switch (gameEvent.type) {
         //Additional keys: user_id
         case "PLAYER_JOINED":
             break;
