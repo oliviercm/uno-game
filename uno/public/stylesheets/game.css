@@ -326,6 +326,35 @@ body {
     bottom: 0px;
 }
 
+.opponentName{
+    font-family: Lobster;
+    font-size: 40px;
+    color: yellow;
+    position: absolute;
+}
+
+#opNameLeft,
+#opNameRight {
+    height: 50vh;
+    top: 50vh;
+    margin-top: -30vh;
+}
+
+#opNameLeft {
+    right: 0px;
+}
+
+#opNameRight{
+    left: 0px;
+}
+
+#opNameTop {
+    top: 0px;
+    left: 50%;
+    margin-left: -20%;
+}
+
+
 #leftOpponent,
 #rightOpponent {
     border: .2rem solid yellow;
