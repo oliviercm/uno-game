@@ -164,8 +164,9 @@ body {
     gap: 35px;
 }
 
-.deck,.discard{
-    border:.2rem solid yellow;
+.deck,
+.discard {
+    border: .2rem solid yellow;
     border-radius: 1rem;
     color: yellow;
     font-size: 2rem;
@@ -182,7 +183,7 @@ body {
     gap: 20px;
 }
 
-.reshuffle{
+.reshuffle {
     z-index: 1;
     text-decoration: none;
     border-radius: 2rem;
@@ -195,13 +196,13 @@ body {
     justify-content: center;
 }
 
-.reshuffle:hover{
+.reshuffle:hover {
     cursor: pointer;
     filter: brightness(85%);
     transition: .2s;
 }
 
-.deckContainer{
+.deckContainer {
     position: absolute;
     max-width: 388px;
     max-height: 562px;
@@ -211,6 +212,101 @@ body {
     flex-direction: row;
 }
 
+.unoButtonContainer{
+    visibility: hidden;
+    position: absolute;
+    cursor: pointer;
+    border-radius: 100px;
+    background-color: rgba(10, 10, 10, .7);
+    transition: 200ms ease-in;
+    top: 65%;
+    right: 46%;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    flex-direction: column;
+}
+.unoButtonContainer:hover{
+    transform: rotate(-10deg) scale(0.9);
+}
+
+.unoButton {
+    z-index: 1;
+    display: block;
+    cursor: pointer;
+    border-color: transparent;
+    backface-visibility: hidden;
+    text-align: center;
+    text-decoration: none;
+    font-family: Lobster;
+    font-size: 4rem;
+    top: 65%;
+    right: 46%;
+    background-image: linear-gradient(to left, blue, green, yellow, orange, red);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(2px 2px #333);
+}
+
+.unoButton:hover {
+    filter: brightness(70%);
+}
+
+.youDidNotSayUnoButtonContainer{
+    visibility: hidden;
+    position: absolute;
+    cursor: pointer;
+    border-radius: 100px;
+    background-image: linear-gradient(to left, rgba(255, 255, 255, 0.7), rgba(128, 128, 128, 0.7));
+    box-shadow: 4px 4px 12px 2px rgba(0, 0, 0, 0.60);
+    transition: 200ms ease-in;
+    top: 65%;
+    left:40%;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    flex-direction: column;
+
+}
+.youDidNotSayUnoButton{
+    z-index: 1;
+    display: block;
+    cursor: pointer;
+    border-color: transparent;
+    backface-visibility: hidden;
+    text-align: center;
+    text-decoration: none;
+    font-family: Lobster;
+    font-size: 3rem;
+    background-image: linear-gradient(to left, black, white);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(2px 2px #333);
+}
+
+.youDidNotSayUnoButtonContainer:hover{
+    animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+    filter: brightness(70%);
+}
+
+@keyframes shake {
+    10%, 90% {
+      transform: translate3d(-1px, 0, 0);
+    }
+    
+    20%, 80% {
+      transform: translate3d(2px, 0, 0);
+    }
+  
+    30%, 50%, 70% {
+      transform: translate3d(-4px, 0, 0);
+    }
+  
+    40%, 60% {
+      transform: translate3d(4px, 0, 0);
+    }
+  }
+
 .hand {
     position: fixed;
     display: flex;
@@ -218,7 +314,7 @@ body {
 }
 
 #myHand {
-    border:.2rem solid yellow;
+    border: .2rem solid yellow;
     border-bottom: 0px;
     border-radius: 1rem;
     border-bottom-left-radius: 0%;
@@ -230,8 +326,9 @@ body {
     bottom: 0px;
 }
 
-#opponentHand1,#opponentHand3{
-    border:.2rem solid yellow;
+#leftOpponent,
+#rightOpponent {
+    border: .2rem solid yellow;
     border-radius: 1rem;
     width: 21vh;
     height: 50vh;
@@ -240,15 +337,15 @@ body {
     flex-direction: column;
 }
 
-#opponentHand1 {
+#leftOpponent {
     left: 0px;
     border-left: 0px;
     border-top-left-radius: 0%;
     border-bottom-left-radius: 0%;
 }
 
-#opponentHand2 {
-    border:.2rem solid yellow;
+#topOpponent {
+    border: .2rem solid yellow;
     border-top: 0px;
     border-radius: 1rem;
     border-top-left-radius: 0%;
@@ -260,7 +357,7 @@ body {
     top: 0px;
 }
 
-#opponentHand3 {
+#rightOpponent {
     right: 0px;
     border-right: 0px;
     border-top-right-radius: 0%;
@@ -280,46 +377,46 @@ body {
     transition: 0.2s;
 }
 
-.deckCard{
+.deckCard {
     min-width: 100%;
     z-index: 2;
     box-shadow: 2px 4px 8px 1px rgba(0, 0, 0, 0.20);
 }
 
-.discardCard{
+.discardCard {
     position: absolute;
     box-shadow: 2px 4px 8px 2px rgba(0, 0, 0, 0.20);
 }
 
-.dealCard{
+.dealCard {
     position: absolute;
     background-color: green;
     z-index: 3;
 }
 
-.addCard{
+.addCard {
     margin-top: 200px;
 }
 
 
 .deckCard,
-.rightCard,
-.leftCard,
-.topCard {
+.rightOpponentCard,
+.leftOpponentCard,
+.topOpponentCard {
     background-image: url('/assets/Deck.png');
 }
 
-.leftCard {
+.leftOpponentCard {
     margin-left: 4vh;
     transform: rotate(90deg);
 }
 
-.topCard {
+.topOpponentCard {
     margin-top: 10px;
     transform: rotate(180deg);
 }
 
-.rightCard {
+.rightOpponentCard {
     margin-left: 4vh;
     transform: rotate(270deg);
 }
@@ -348,19 +445,20 @@ body {
     cursor: pointer;
 }
 
-.deckCard:not(:first-child){
+.deckCard:not(:first-child) {
     margin-left: -99.7%;
 }
 
-.deckCard:is(:last-child):hover{
+.deckCard:is(:last-child):hover {
+    cursor: pointer;
     filter: brightness(85%);
 }
 
-.rightCard:not(:first-child),
-.leftCard:not(:first-child) {
+.rightOpponentCard:not(:first-child),
+.leftOpponentCard:not(:first-child) {
     margin-top: calc(3*-3vh);
 }
 
-.topCard:not(:last-child) {
+.topOpponentCard:not(:last-child) {
     margin-right: calc(3*-1vh);
 }

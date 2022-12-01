@@ -2,12 +2,12 @@ doctype html
 head
     meta(charset='UTF-8')
     link(rel='stylesheet' href='stylesheets/game.css')
-    script(defer, src="js/mainGame.js" type="module")
+    script(defer, src="js/gameFrontEnd.js" type="module")
     title Home
+script(src='/socket.io/socket.io.js')
 .gameScreenContainer
     .discard
         a Discard Pile
-        //button.addCard(type="button", onclick="discardCard()")
     .deck
         a.reshuffleText Deck Empty
         button.reshuffle(type="button") Reshuffle
@@ -72,16 +72,20 @@ head
             .card.deckCard
             .card.deckCard
             .card.deckCard
+    .unoButtonContainer
+        button.unoButton(type="button") Uno!
+    .youDidNotSayUnoButtonContainer
+        button.youDidNotSayUnoButton(type="button") You didn't say Uno!
     #myHand.hand
-    #opponentHand1.hand
-        .card.leftCard
-        .card.leftCard
-        .card.leftCard
-    #opponentHand2.hand
-        .card.topCard
-        .card.topCard
-        .card.topCard
-    #opponentHand3.hand
-        .card.rightCard
-        .card.rightCard
-        .card.rightCard
+    #leftOpponent.hand
+        .card.leftOpponentCard
+        .card.leftOpponentCard
+        .card.leftOpponentCard
+    #topOpponent.hand
+        .card.topOpponentCard
+        .card.topOpponentCard
+        .card.topOpponentCard
+    #rightOpponent.hand
+        .card.rightOpponentCard
+        .card.rightOpponentCard
+        .card.rightOpponentCard

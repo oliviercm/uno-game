@@ -18,6 +18,14 @@ module.exports = {
         type: Sequelize.BOOLEAN,
         allowNull: false,
       },
+      chosen_wildcard_color: {
+        type: Sequelize.ENUM(
+          "RED",
+          "YELLOW",
+          "BLUE",
+          "GREEN"),
+        allowNull: true,
+      },
     });
   },
   async down(queryInterface, Sequelize) {
