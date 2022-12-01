@@ -16,20 +16,38 @@ const gamePlayers = {
     rightOpponent: ""
 };
 
+let currentUser;
+fetch('/api/users/current')
+    .then((response) => {
+      if (response.status == 200) {
+        response.json().then(data => {
+           currentUser = data.user;
+           console.log(currentUser);
+        });
+      } else {
+        alert('Not logged in');
+      }
+    });
+
 socket.on("game_state", (gameState) => {
     console.log(gameState);
+    const currentUserCards = gameState?.cards.filter(card => {
+        return card.location === "HAND" && card.user_id === currentUser.user_id;
+    }).sort((a, b) => a.order - b.order);
+    for (const card of currentUserCards) {
+        dealCard(CARD_FILE[card.color][card.value]);
+    }
+    console.log(currentUserCards);
 });
 
 socket.on('game_event', (data) => {
     switch (data.type) {
         //Additional keys: user_id
         case "PLAYER_JOINED":
-            addPlayer(data.user_id);
             break;
         //Additional keys: user_id
         case "PLAYER_LEFT":
         case "PLAYER_FORFEIT":
-            removePlayer(data.user_id);
             break;
         case "DECK_SHUFFLED":
             replenishDeck();
@@ -96,11 +114,6 @@ function replenishDeck(deckSize) {
     lastDeckCard.addEventListener("click", takeAndDeal, false);
 }
 
-//TODO
-//Testing code: remove
-for (let i = 0; i < 10; i++) {
-    dealCard();
-}
 
 function takeAndDeal() {
     lastDeckCard.remove()
@@ -117,13 +130,13 @@ function takeAndDeal() {
  *              ∨
  */
 
-function dealCard() {
+function dealCard(cardType) {
     //TODO
     //Get top card of database deck and assign specific card background
     let elem = document.getElementById("myHand");
     let newCard = document.createElement("div");
     newCard.classList.add("card", "myCard");
-    newCard.style.backgroundImage = "url(" + CARD_FILE.GREEN.FIVE + ")";
+    newCard.style.backgroundImage = "url(" + cardType + ")";
     newCard.addEventListener("click", function () { playCard(newCard); }, false);
     elem.appendChild(newCard);
 }
