@@ -1,6 +1,7 @@
 head
   meta(charset='UTF-8')
   link(rel='stylesheet' href='stylesheets/style.css')
+  script(src='scripts/login_frontend.js')
   title Home
 .unoHeader
   span#header1 U
@@ -13,9 +14,10 @@ head
         #lHeader
           b Sign in
       #inputContainer
-        input(type='text' placeholder='Enter Username' required='terms' name='uname')
-        input(type='password' placeholder='Enter Password' required='terms' name='pword')
-        button.loginButton(type='submit') &gt;
+        input(type='text' placeholder='Enter Username' required='terms' name='uname' id = 'username')
+        input(type='password' placeholder='Enter Password' required='terms' name='pword' id = 'password')
+        button.loginButton(type='button' onclick = 'login_execute()') &gt;
       a.createAccount(href='/registration')
         | Don't have an account?
         | Create one!
+
