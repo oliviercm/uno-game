@@ -91,6 +91,7 @@ module.exports = {
     await queryInterface.bulkInsert("cards", cards);
   },
   async down(queryInterface, Sequelize) {
+    await queryInterface.bulkDelete("game_cards", {});
     await queryInterface.bulkDelete("cards", {});
   }
 };

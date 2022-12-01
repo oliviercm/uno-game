@@ -139,4 +139,37 @@ router.post("/:gameId/chat", passport.session(), async (req, res, next) => {
   }
 });
 
+/**
+ * POST /api/games/:gameId/play-card
+ * 
+ * Plays a card.
+ */
+router.post("/:gameId/play-card", passport.session(), async (req, res, next) => {
+  try {
+    if (!req.user) {
+      throw new ApiUnauthorizedError("Not logged in.");
+    }
+
+    // Verify request body has all required properties and has correct format
+    const schema = Joi.object({
+      card_id: Joi.number().integer().required(),
+      chosen_wildcard_color: Joi.valid("RED", "YELLOW", "BLUE", "GREEN"),
+    });
+    const validated = await schema.validateAsync(req.body);
+
+    // Retrieve game instance
+    const game = await GameManager.getGameByGameId(req.params.gameId);
+    if (!game) {
+      throw new ApiNotFoundError(`Game with ID '${req.params.gameId}' does not exist.`);
+    }
+
+    // Play card
+    await game.playCard(req.user.user_id, validated.card_id, validated.chosen_wildcard_color);
+
+    return res.status(200).send();
+  } catch(e) {
+    next(e);
+  }
+});
+
 module.exports = router;
