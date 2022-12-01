@@ -1,7 +1,13 @@
 import { CARD_FILE } from "./resources.js";
 
+const searchParams = new URLSearchParams(window.location.search);
+const gameId = searchParams.get("id");
+
 const socket = io({
-    path: "/games/"
+    path: "/games/",
+    query: {
+        game_id: gameId,
+    },
 });
 
 const gamePlayers = {
@@ -9,6 +15,10 @@ const gamePlayers = {
     topOpponent: "",
     rightOpponent: ""
 };
+
+socket.on("game_state", (gameState) => {
+    console.log(gameState);
+});
 
 socket.on('game_event', (data) => {
     switch (data.type) {
@@ -192,5 +202,3 @@ function discardPileCard() {
     newCard.style.transform = 'rotate(calc(' + randomDegree + 'deg' + '))'
     elem.appendChild(newCard);
 }
-
-
