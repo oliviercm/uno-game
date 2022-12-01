@@ -58,6 +58,7 @@ socket.on('game_event', (data) => {
             break;
         case "GAME_DELETED":
             //?? what do we display here
+            // TODO: display message "the host has ended the game", redirect to lobby
             break;
         case "GAME_STARTED":
             //TODO
