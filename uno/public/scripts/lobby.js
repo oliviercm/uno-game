@@ -24,6 +24,22 @@ socket.on('gameList', (data) => {
     gameList.innerHTML += creatGameCard(data.game_id, data.username)
 })
 
+
+window.onload = function populateGameList() {
+
+    fetch('/api/games/getGames')
+        .then((response) => {
+            return response.json()
+        })
+        .then((data) => {
+            data.forEach(element => {
+                gameList.innerHTML += creatGameCard(element.game_id)
+            });
+        })
+        .catch((err) => console.log(err));
+}
+
+
 function createContainer(username, message) {
     return `
 <div class="row comments mb-2">
@@ -115,9 +131,9 @@ function createGame() {
 }
 
 
-function creatGameCard(game_id, username) {
+function creatGameCard(game_id) {
     return `<div class="game-card">
-    <p>Username: ${username}, Game Id: ${game_id} 
+    <p>Game Id: ${game_id} 
     <button class="join-game" onclick = "joinGame(${game_id})">JOIN GAME</button>
     </p>
     </div>`

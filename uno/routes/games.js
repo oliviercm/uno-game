@@ -29,6 +29,21 @@ router.post("/", passport.session(), async (req, res, next) => {
   }
 });
 
+router.get("/getGames", passport.session(), async (req, res, next) => {
+  try {
+    if (!req.user) {
+      throw new ApiUnauthorizedError("Not logged in.");
+    }
+    const gameList = await GameManager.getAllGames();
+
+    return res.status(200).send(gameList)
+   
+  } catch(e) {
+    next(e);
+  }
+
+});
+
 /**
  * POST /api/games/:gameId/start
  * 
