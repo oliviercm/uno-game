@@ -20,7 +20,7 @@ socket.on('message', (data) => {
 
 })
 
-socket.on('gameList', (data) => {
+socket.on('game_created', (data) => {
     gameList.innerHTML += creatGameCard(data.game_id)
 })
 
@@ -93,7 +93,7 @@ function createGame() {
             return globalgame_id
         })
         .then(function (globalgame_id) {
-            fetch('/api/global-chat/gameList', {
+            fetch('/api/global-chat/game-created', {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
