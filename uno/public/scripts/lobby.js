@@ -135,7 +135,6 @@ function startGame() {
 }
 
 function joinGame(game_id) {
-    console.log("JOINED GAME")
     const query = `/api/games/${game_id}/join`
     fetch(query, {
         method: 'POST',
