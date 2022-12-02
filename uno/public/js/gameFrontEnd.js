@@ -1,7 +1,7 @@
 import { CARD_FILE } from "./resources.js";
 
 const searchParams = new URLSearchParams(window.location.search);
-const gameId = searchParams.get("id");
+const gameId = searchParams.get("game_id");
 
 const socket = io({
     path: "/games/",

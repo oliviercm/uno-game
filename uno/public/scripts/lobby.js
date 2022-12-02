@@ -27,12 +27,12 @@ socket.on('gameList', (data) => {
 
 window.onload = function populateGameList() {
 
-    fetch('/api/games/getGames')
+    fetch('/api/games')
         .then((response) => {
             return response.json()
         })
         .then((data) => {
-            data.forEach(element => {
+            data.games.forEach(element => {
                 gameList.innerHTML += creatGameCard(element.game_id)
             });
         })
@@ -126,7 +126,7 @@ function startGame() {
     })
         .then((response) => {
             if (response.status == 200) {
-                window.location.href = `/game?=game_id=${globalgame_id}`;
+                window.location.href = `/game?game_id=${globalgame_id}`;
             }
             else {
                 alert('ERROR')
@@ -142,7 +142,7 @@ function joinGame(game_id) {
     })
         .then((response) => {
             if (response.status == 200) {
-                window.location.href = `/game?=game_id=${game_id}`;
+                window.location.href = `/game?game_id=${game_id}`;
             }
             else {
                 alert('ERROR')

@@ -32,6 +32,9 @@ module.exports = (server) => {
       if (!socket?.handshake?.query?.game_id) {
         return next(new Error("Query missing game_id."));
       }
+      if (isNaN(parseInt(socket?.handshake?.query?.game_id))) {
+        return next(new Error("game_id must be a number."));
+      }
       if (!await GameManager.getGameByGameId(socket.handshake.query.game_id)) {
         return next(new Error(`Game with game_id ${socket.handshake.query.game_id} does not exist.`));
       }

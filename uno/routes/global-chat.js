@@ -5,7 +5,6 @@ const Joi = require("joi");
 const GlobalChatManager = require("../managers/GlobalChatManager");
 const ApiUnauthorizedError = require("../errors/ApiUnauthorizedError");
 
-
 /**
  * POST /api/global-chat
  * 
