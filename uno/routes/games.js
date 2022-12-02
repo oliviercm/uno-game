@@ -7,6 +7,26 @@ const ApiNotFoundError = require("../errors/ApiNotFoundError");
 const ApiUnauthorizedError = require("../errors/ApiUnauthorizedError");
 
 /**
+ * GET /api/games
+ * 
+ * Gets games for lobby.
+ */
+router.get("/", passport.session(), async (req, res, next) => {
+  try {
+    if (!req.user) {
+      throw new ApiUnauthorizedError("Not logged in.");
+    }
+    const games = await GameManager.getAllGames();
+
+    return res.status(200).json({
+      games: games,
+    });
+  } catch(e) {
+    next(e);
+  }
+});
+
+/**
  * POST /api/games
  * 
  * Creates a new game.

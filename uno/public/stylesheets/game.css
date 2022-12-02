@@ -1,0 +1,493 @@
+@import url("https://fonts.googleapis.com/css2?family=Lobster&display=swap");
+
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+embed,
+figure,
+figcaption,
+footer,
+header,
+hgroup,
+menu,
+nav,
+output,
+ruby,
+section,
+summary,
+time,
+mark,
+audio,
+video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+}
+
+/* HTML5 display-role reset for older browsers */
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section {
+    display: block;
+}
+
+body {
+    line-height: 1;
+}
+
+ol,
+ul {
+    list-style: none;
+}
+
+blockquote,
+q {
+    quotes: none;
+}
+
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+    content: '';
+    content: none;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/**
+* END CSS RESET
+**/
+
+html {
+    --distance: 1rem;
+}
+
+body {
+    width: 100%;
+    height: 100%;
+}
+
+.gameScreenContainer {
+    background-image: url('/assets/Table_2.png');
+    background-size: cover;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 35px;
+}
+
+.deck,
+.discard {
+    border: .2rem solid yellow;
+    border-radius: 1rem;
+    color: yellow;
+    font-size: 2rem;
+    font-family: Lobster;
+    text-align: center;
+    max-width: 388px;
+    max-height: 562px;
+    width: 12.93vh;
+    height: 18.73vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+.reshuffle {
+    z-index: 1;
+    text-decoration: none;
+    border-radius: 2rem;
+    border: 0.12vw solid black;
+    background-color: rgba(0, 0, 0, .5);
+    font-family: Lobster;
+    color: yellow;
+    font-size: 1.5rem;
+    top: 10%;
+    justify-content: center;
+}
+
+.reshuffle:hover {
+    cursor: pointer;
+    filter: brightness(85%);
+    transition: .2s;
+}
+
+.deckContainer {
+    position: absolute;
+    max-width: 388px;
+    max-height: 562px;
+    width: 12.93vh;
+    height: 18.73vh;
+    display: flex;
+    flex-direction: row;
+}
+
+.unoButtonContainer{
+    visibility: hidden;
+    position: absolute;
+    cursor: pointer;
+    border-radius: 100px;
+    background-color: rgba(10, 10, 10, .7);
+    transition: 200ms ease-in;
+    top: 65%;
+    right: 46%;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    flex-direction: column;
+}
+.unoButtonContainer:hover{
+    transform: rotate(-10deg) scale(0.9);
+}
+
+.unoButton {
+    z-index: 1;
+    display: block;
+    cursor: pointer;
+    border-color: transparent;
+    backface-visibility: hidden;
+    text-align: center;
+    text-decoration: none;
+    font-family: Lobster;
+    font-size: 4rem;
+    top: 65%;
+    right: 46%;
+    background-image: linear-gradient(to left, blue, green, yellow, orange, red);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(2px 2px #333);
+}
+
+.unoButton:hover {
+    filter: brightness(70%);
+}
+
+.youDidNotSayUnoButtonContainer{
+    visibility: hidden;
+    position: absolute;
+    cursor: pointer;
+    border-radius: 100px;
+    background-image: linear-gradient(to left, rgba(255, 255, 255, 0.7), rgba(128, 128, 128, 0.7));
+    box-shadow: 4px 4px 12px 2px rgba(0, 0, 0, 0.60);
+    transition: 200ms ease-in;
+    top: 65%;
+    left:40%;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    flex-direction: column;
+
+}
+.youDidNotSayUnoButton{
+    z-index: 1;
+    display: block;
+    cursor: pointer;
+    border-color: transparent;
+    backface-visibility: hidden;
+    text-align: center;
+    text-decoration: none;
+    font-family: Lobster;
+    font-size: 3rem;
+    background-image: linear-gradient(to left, black, white);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(2px 2px #333);
+}
+
+.youDidNotSayUnoButtonContainer:hover{
+    animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+    filter: brightness(70%);
+}
+
+@keyframes shake {
+    10%, 90% {
+      transform: translate3d(-1px, 0, 0);
+    }
+    
+    20%, 80% {
+      transform: translate3d(2px, 0, 0);
+    }
+  
+    30%, 50%, 70% {
+      transform: translate3d(-4px, 0, 0);
+    }
+  
+    40%, 60% {
+      transform: translate3d(4px, 0, 0);
+    }
+  }
+
+.hand {
+    position: fixed;
+    display: flex;
+    justify-content: center;
+}
+
+#myHand {
+    border: .2rem solid yellow;
+    border-bottom: 0px;
+    border-radius: 1rem;
+    border-bottom-left-radius: 0%;
+    border-bottom-right-radius: 0%;
+    width: 50%;
+    left: 50%;
+    margin-left: -25%;
+    height: 22vh;
+    bottom: 0px;
+}
+
+.opponentName{
+    font-family: Lobster;
+    font-size: 40px;
+    color: yellow;
+    position: absolute;
+}
+
+#opNameLeft,
+#opNameRight {
+    height: 50vh;
+    top: 50vh;
+    margin-top: -30vh;
+}
+
+#opNameLeft {
+    right: 0px;
+}
+
+#opNameRight{
+    left: 0px;
+}
+
+#opNameTop {
+    top: 0px;
+    left: 50%;
+    margin-left: -20%;
+}
+
+
+#leftOpponent,
+#rightOpponent {
+    border: .2rem solid yellow;
+    border-radius: 1rem;
+    width: 21vh;
+    height: 50vh;
+    top: 50vh;
+    margin-top: -25vh;
+    flex-direction: column;
+}
+
+#leftOpponent {
+    left: 0px;
+    border-left: 0px;
+    border-top-left-radius: 0%;
+    border-bottom-left-radius: 0%;
+}
+
+#topOpponent {
+    border: .2rem solid yellow;
+    border-top: 0px;
+    border-radius: 1rem;
+    border-top-left-radius: 0%;
+    border-top-right-radius: 0%;
+    left: 50%;
+    margin-left: -15%;
+    width: 30%;
+    height: 21vh;
+    top: 0px;
+}
+
+#rightOpponent {
+    right: 0px;
+    border-right: 0px;
+    border-top-right-radius: 0%;
+    border-bottom-right-radius: 0%;
+}
+
+.card {
+    background-repeat: no-repeat;
+    background-size: contain;
+    padding: 2rem;
+    max-width: 388px;
+    max-height: 562px;
+    width: 12.93vh;
+    height: 18.73vh;
+    border-radius: .5rem;
+    box-shadow: 4px 4px 12px 2px rgba(0, 0, 0, 0.60);
+    transition: 0.2s;
+}
+
+.deckCard {
+    min-width: 100%;
+    z-index: 2;
+    box-shadow: 2px 4px 8px 1px rgba(0, 0, 0, 0.20);
+}
+
+.discardCard {
+    position: absolute;
+    box-shadow: 2px 4px 8px 2px rgba(0, 0, 0, 0.20);
+}
+
+.dealCard {
+    position: absolute;
+    background-color: green;
+    z-index: 3;
+}
+
+.addCard {
+    margin-top: 200px;
+}
+
+
+.deckCard,
+.rightOpponentCard,
+.leftOpponentCard,
+.topOpponentCard {
+    background-image: url('/assets/Deck.png');
+}
+
+.leftOpponentCard {
+    margin-left: 4vh;
+    transform: rotate(90deg);
+}
+
+.topOpponentCard {
+    margin-top: 10px;
+    transform: rotate(180deg);
+}
+
+.rightOpponentCard {
+    margin-left: 4vh;
+    transform: rotate(270deg);
+}
+
+.myCard {
+    margin-top: 10px;
+}
+
+.myCard:not(:first-child) {
+    margin-left: calc(21*-.5vh);
+}
+
+.myCard:hover,
+.myCard:focus-within {
+    transform: translatey(-2vh);
+}
+
+.myCard:hover~.myCard,
+.myCard:focus-within~.myCard {
+    transform: translatex(calc(21*.5vh));
+}
+
+.myCard:hover {
+    filter: brightness(85%);
+    transition: .5s ease;
+    cursor: pointer;
+}
+
+.deckCard:not(:first-child) {
+    margin-left: -99.7%;
+}
+
+.deckCard:is(:last-child):hover {
+    cursor: pointer;
+    filter: brightness(85%);
+}
+
+.rightOpponentCard:not(:first-child),
+.leftOpponentCard:not(:first-child) {
+    margin-top: calc(3*-3vh);
+}
+
+.topOpponentCard:not(:last-child) {
+    margin-right: calc(3*-1vh);
+}

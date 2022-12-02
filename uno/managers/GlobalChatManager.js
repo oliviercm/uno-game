@@ -18,6 +18,13 @@ class GlobalChatManager {
     }
     console.log(`[Global Chat Manager] Emitted global chat message "${message}" to ${Object.keys(this.connectedSockets).length} connected sockets.`);
   }
+
+  emitGameCreated(game_id) {
+    for (const socketId in this.connectedSockets) {
+      this.connectedSockets[socketId].emit("game_created", { game_id: game_id });
+    }
+    console.log(`[Global Chat Manager] Emitted new game with id: "${game_id}" to ${Object.keys(this.connectedSockets).length} connected sockets.`);
+  }
 }
 
 module.exports = new GlobalChatManager();

@@ -51,7 +51,7 @@ class Game {
   }
 
   /**
-   * Returns the sanitized game state (cards that the user shouldn't see are hideen) for a user.
+   * Returns the sanitized game state (cards that the user shouldn't see are hidden) for a user.
    * This should only be used when emitting game state to a single user (only occurs during initial socket connection).
    */
   async getGameStateForUser(userId) {

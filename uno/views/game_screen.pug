@@ -1,0 +1,34 @@
+doctype html
+head
+    meta(charset='UTF-8')
+    link(rel='stylesheet' href='stylesheets/game.css')
+    script(defer, src="js/gameFrontEnd.js" type="module")
+    title Home
+script(src='/socket.io/socket.io.js')
+.gameScreenContainer
+    .discard
+        a Discard Pile
+    .deck
+        a.reshuffleText Deck Empty
+        button.reshuffle(type="button") Reshuffle
+        .deckContainer
+    .unoButtonContainer
+        button.unoButton(type="button") Uno!
+    .youDidNotSayUnoButtonContainer
+        button.youDidNotSayUnoButton(type="button") You didn't say Uno!
+    #myHand.hand
+    #opNameLeft.opponentName Sophia
+    #leftOpponent.hand
+        .card.leftOpponentCard
+        .card.leftOpponentCard
+        .card.leftOpponentCard
+    #opNameTop.opponentName Troy
+    #topOpponent.hand
+        .card.topOpponentCard
+        .card.topOpponentCard
+        .card.topOpponentCard
+    #opNameRight.opponentName Olivier
+    #rightOpponent.hand
+        .card.rightOpponentCard
+        .card.rightOpponentCard
+        .card.rightOpponentCard

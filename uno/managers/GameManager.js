@@ -28,6 +28,16 @@ class GameManager {
     return null;
   }
 
+  async getAllGames() {
+    const getGames = new pgp.PreparedStatement({
+      name: "get-games",
+      text: "SELECT * FROM games",
+    });
+    const games = await db.query(getGames);
+
+    return games;
+  }
+
   async createNewGame(hostUserId) {
     const newGameId = await db.tx(async t => {
       const createGame = new pgp.PreparedStatement({
