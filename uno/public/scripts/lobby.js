@@ -21,7 +21,7 @@ socket.on('message', (data) => {
 })
 
 socket.on('gameList', (data) => {
-    gameList.innerHTML += creatGameCard(data.game_id, data.username)
+    gameList.innerHTML += creatGameCard(data.game_id)
 })
 
 
@@ -84,27 +84,6 @@ function addMessage() {
 
 function createGame() {
 
-    // let username;
-    // fetch('/api/users/current')
-    // .then((response) =>{
-    //     if (response.status == 200) {
-    //         response.json().then(data => {
-    //            username = data.user.username;
-    //         });
-    //       } else {
-    //         alert('Not logged in');
-    //       }
-    // })
-    // .then(function(){
-    //     fetch('/api/games', {method:'POST'})
-    // .then((response)=>{
-    //     response.json().then((data) =>{
-    //         game_id = data.game_id;
-    //         gameList.innerHTML+=creatGameCard(game_id, username)
-    //     })
-    // })
-    // })
-    // .catch((err) => console.log(err));
     fetch('/api/games', { method: 'POST' })
         .then((response) => {
             return response.json()
@@ -156,6 +135,7 @@ function startGame() {
 }
 
 function joinGame(game_id) {
+    console.log("JOINED GAME")
     const query = `/api/games/${game_id}/join`
     fetch(query, {
         method: 'POST',
