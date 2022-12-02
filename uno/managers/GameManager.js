@@ -5,7 +5,6 @@ const Game = require("./dependencies/Game");
 class GameManager {
   constructor() {
     this.games = {};
-    this.connectedSockets = {};
   }
 
   async getGameByGameId(gameId) {
@@ -29,13 +28,12 @@ class GameManager {
     return null;
   }
 
-  async getAllGames(){
-
+  async getAllGames() {
     const getGames = new pgp.PreparedStatement({
       name: "get-games",
       text: "SELECT * FROM games",
     });
-    const games = await db.query(getGames)
+    const games = await db.query(getGames);
 
     return games;
   }
