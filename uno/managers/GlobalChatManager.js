@@ -18,6 +18,14 @@ class GlobalChatManager {
     }
     console.log(`[Global Chat Manager] Emitted global chat message "${message}" to ${Object.keys(this.connectedSockets).length} connected sockets.`);
   }
+
+  //troy added this for lobby game list
+  emitGlobalGameList(username, game_id) {
+    for (const socketId in this.connectedSockets) {
+      this.connectedSockets[socketId].emit("gameList", { username: username, game_id: game_id });
+    }
+    console.log(`[Global Chat Manager] Emitted gameList with id: "${game_id}" to ${Object.keys(this.connectedSockets).length} connected sockets.`);
+  }
 }
 
 module.exports = new GlobalChatManager();
