@@ -4,6 +4,7 @@ const input = document.querySelector('.input-field-chat')
 const creatGameButton = document.querySelector('.new-game-button')
 const gameList = document.querySelector('.box-game-list')
 const startGameButton = document.querySelector('.start-game')
+const refreshGameListButton = document.querySelector('.refresh-games-button')
 const socket = io({
     path: "/global-chat/"
 });
@@ -11,6 +12,7 @@ const socket = io({
 startGameButton.addEventListener('click', startGame)
 messageButton.addEventListener('click', addMessage);
 creatGameButton.addEventListener('click', createGame);
+refreshGameListButton.addEventListener('click', refreshGameList);
 
 let globalgame_id;
 
@@ -18,10 +20,6 @@ socket.on('message', (data) => {
 
     message_container.innerHTML += createContainer(data.username, data.message)
 
-})
-
-socket.on('game_created', (data) => {
-    gameList.innerHTML += creatGameCard(data.game_id)
 })
 
 
@@ -148,4 +146,19 @@ function joinGame(game_id) {
                 alert('ERROR')
             }
         })
+}
+
+function refreshGameList() {
+    gameList.innerHTML = ""
+
+    fetch('/api/games')
+    .then((response) => {
+        return response.json()
+    })
+    .then((data) => {
+        data.games.forEach(element => {
+            gameList.innerHTML += creatGameCard(element.game_id)
+        });
+    })
+    .catch((err) => console.log(err));
 }
