@@ -702,7 +702,7 @@ class Game {
    * DEALT_CARD - A card was dealt to a player.
    *    Additional keys: user_id
    * 
-   * * CARD_PLAYED - A card was played by a player.
+   * CARD_PLAYED - A card was played by a player.
    *    Additional keys: user_id, card_color, card_value
    * 
    * GAME_DELETED - All players left before game started.
