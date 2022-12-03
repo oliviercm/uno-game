@@ -88,7 +88,8 @@ socket.on("game_state", (gameState) => {
         return card.location === "HAND" && card.user_id === currentUser.user_id;
     }).sort((a, b) => a.order - b.order);
     for (const card of currentUserCards) {
-        dealCard(CARD_FILE[card.color][card.value]);
+        // dealCard(CARD_FILE[card.color][card.value]); -- change by troy
+        dealCard(card)
     }
     console.log(currentUserCards);
 });
@@ -184,16 +185,14 @@ function takeAndDeal() {
  *              ∨
  */
 
-function dealCard(cardType) {
+function dealCard(card) {
     //TODO
     //Get top card of database deck and assign specific card background
-    console.log('HERE')
-    console.log(currentUserCards);
-    console.log(cardType);
     let elem = document.getElementById("myHand");
     let newCard = document.createElement("div");
     newCard.classList.add("card", "myCard");
-    newCard.style.backgroundImage = "url(" + cardType + ")";
+    newCard.setAttribute('id', `${card.card_id}`)
+    newCard.style.backgroundImage = "url(" + CARD_FILE[card.color][card.value] + ")";
     newCard.addEventListener("click", function () { playCard(newCard); }, false);
     elem.appendChild(newCard);
 }
@@ -217,26 +216,32 @@ function dealOpponentCard(user_id) {
 //add timeout to play another card
 function playCard(elem) {
     //TODO
-    //Need a way to track which card in hand is which corresponding database card
-    // console.log("HERE")
-    // console.log(elem);
-    // const query = `/:${gameId}/play-card`
-    // fetch(q, {
-    //     method: 'POST',
-    //     credentials: 'include',
-    //     body: JSON.stringify({
-
-    //     })
-    // })
-
-    discardPileCard();
-    let seconds = .2;
-    elem.style.transition = "opacity " + seconds + "s ease";
-    elem.style.opacity = 0;
-    setTimeout(function () {
-        elem.remove();
-    }, 300);
-    //elem.remove();
+    const num = parseInt(elem.id)
+    const query = `/api/games/${gameId}/play-card`
+    fetch(query, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            "card_id": num
+        })
+    })
+    .then((response)=>{
+        if(response.status == 200){
+            discardPileCard(elem);
+            let seconds = .2;
+            elem.style.transition = "opacity " + seconds + "s ease";
+            elem.style.opacity = 0;
+            setTimeout(function () {
+                elem.remove();
+            }, 300);
+            //elem.remove();
+        } else {
+            alert(response.statusText)
+        }
+    })
 }
 
 
@@ -266,13 +271,16 @@ function POSTCard() {
  *              ∨
  */
 
-function discardPileCard() {
+function discardPileCard(card) {
+    console.log("DISCARD WAS CALLED")
     let elem = document.getElementsByClassName("discard").item(0);
     let newCard = document.createElement("div");
     let randomDegree = Math.floor(Math.random() * 20) * (Math.round(Math.random()) ? 1 : -1);
     console.log(randomDegree);
     newCard.classList.add("card", "discardCard");
-    newCard.style.backgroundImage = "url(" + CARD_FILE.GREEN.FIVE + ")";
+    newCard.setAttribute('id', `${card.id}`) //added this --troy
+    // newCard.style.backgroundImage = "url(" + CARD_FILE.GREEN.FIVE + ")"; -- changed this troy
+    newCard.style.backgroundImage = card.style.backgroundImage
     newCard.animate([
         { transform: 'rotate(calc(' + randomDegree + 'deg' + ')) scale(1.5)' },
         { transform: 'rotate(calc(' + randomDegree + 'deg' + ')) scale(1)' }
