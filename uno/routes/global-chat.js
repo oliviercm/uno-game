@@ -34,31 +34,4 @@ router.post("/", passport.session(), async (req, res, next) => {
 });
 
 
-/**
- * POST /api/global-chat/game-created
- * 
- * Request body must be a JSON object containing the keys "game_id".
- */
-router.post("/game-created", passport.session(), async (req, res, next) => {
-  try {
-    if (!req.user) {
-      throw new ApiUnauthorizedError("Not logged in.");
-    }
-
-    // Verify request body has all required properties and has correct format
-    const schema = Joi.object({
-      game_id: Joi.number().integer().required(),
-    });
-    const validated = await schema.validateAsync(req.body);
-
-    // Send game created message
-    const game_id = validated.game_id;
-    GlobalChatManager.emitGameCreated(game_id);
-
-    return res.status(200).send();
-  } catch(e) {
-    next(e);
-  }
-});
-
 module.exports = router;

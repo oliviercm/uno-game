@@ -7,26 +7,21 @@ head
 
   title Document
 .game_window
-  //
-    <div class="top">
-    <h1>LOBBY</h1>
-    </div>
-  // <div class="bot">
   .bot-left-side
     .container-chat
       .accordion-content
         .chat-field
         br
         .input-container
-          input.input-field-chat(type='text')
-          button.input-button SEND
+          input#input-field-chat.input-field-chat(type='text')
+          button#input-button.input-button SEND
         br
         br
       button.accordion CHAT
       script(src='/socket.io/socket.io.js')
       script(src='/scripts/chatbox.js')
-
   .bot-center
+    button.refresh-games-button REFRESH GAME LIST
     .game-list
       .box-game-list
   .bot-right-side
