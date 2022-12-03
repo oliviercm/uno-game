@@ -145,7 +145,7 @@ function refreshGameList() {
     })
     .then((data) => {
         data.games.forEach(element => {
-            gameList.innerHTML += creatGameCard(element.game_id)
+            gameList.innerHTML += createGameCard(element.game_id)
         });
     })
     .catch((err) => console.log(err));
