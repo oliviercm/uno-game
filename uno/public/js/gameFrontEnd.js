@@ -29,9 +29,11 @@ fetch('/api/users/current')
       }
     });
 
+let currentUserCards;
 socket.on("game_state", (gameState) => {
     console.log(gameState);
-    const currentUserCards = gameState?.cards.filter(card => {
+    // const currentUserCards = gameState?.cards.filter(card => { -- change by troy
+        currentUserCards = gameState?.cards.filter(card => {
         return card.location === "HAND" && card.user_id === currentUser.user_id;
     }).sort((a, b) => a.order - b.order);
     for (const card of currentUserCards) {
@@ -134,6 +136,9 @@ function takeAndDeal() {
 function dealCard(cardType) {
     //TODO
     //Get top card of database deck and assign specific card background
+    console.log('HERE')
+    console.log(currentUserCards);
+    console.log(cardType);
     let elem = document.getElementById("myHand");
     let newCard = document.createElement("div");
     newCard.classList.add("card", "myCard");
@@ -162,6 +167,17 @@ function dealOpponentCard(user_id) {
 function playCard(elem) {
     //TODO
     //Need a way to track which card in hand is which corresponding database card
+    // console.log("HERE")
+    // console.log(elem);
+    // const query = `/:${gameId}/play-card`
+    // fetch(q, {
+    //     method: 'POST',
+    //     credentials: 'include',
+    //     body: JSON.stringify({
+            
+    //     })
+    // })
+
     discardPileCard();
     let seconds = .2;
     elem.style.transition = "opacity "+seconds+"s ease";
