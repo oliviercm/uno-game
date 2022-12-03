@@ -2,7 +2,12 @@ import { CARD_FILE } from "./resources.js";
 
 const searchParams = new URLSearchParams(window.location.search);
 const gameId = searchParams.get("game_id");
-
+const message_container = document.querySelector('.chat-field')
+const messageButton = document.querySelector('.input-button')
+const input = document.querySelector('.input-field-chat')
+const socketgChat = io({
+    path: '/global-chat/',
+});
 const socket = io({
     path: "/games/",
     query: {
@@ -10,6 +15,52 @@ const socket = io({
     },
 });
 
+// GCHAT functions
+messageButton.addEventListener('click', addMessage);
+socketgChat.on('message', (data) => {
+    message_container.innerHTML += createContainer(data.username, data.message);
+});
+
+function addMessage() {
+    if (input.value === '') {
+        return;
+    } else {
+        var message = {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                message: input.value,
+            }),
+        };
+        fetch('/api/global-chat', message).catch((err) => console.log(err));
+        input.value = '';
+        input.focus();
+    }
+}
+
+function createContainer(username, message) {
+    return `
+  <div class="row comments mb-2">
+  <div class="col-md-2 col-sm-2 col-3 text-center user-img">
+  <p>&nbsp</p>
+  </div>
+  <div class="col-md-9 col-sm-9 col-9 comment rounded mb-2">
+  <h4 class="m-0"><a href="#">${username}</a></h4>
+  <time class="text-white ml-3"></time>
+  <like></like>
+  <p class="mb-0 text-white">${message}</p>
+  </div>
+  </div>
+  
+  `;
+}
+
+
+//Game State  
 const gamePlayers = {
     leftOpponent: "",
     topOpponent: "",
@@ -19,21 +70,21 @@ const gamePlayers = {
 let currentUser;
 fetch('/api/users/current')
     .then((response) => {
-      if (response.status == 200) {
-        response.json().then(data => {
-           currentUser = data.user;
-           console.log(currentUser);
-        });
-      } else {
-        alert('Not logged in');
-      }
+        if (response.status == 200) {
+            response.json().then(data => {
+                currentUser = data.user;
+                console.log(currentUser);
+            });
+        } else {
+            alert('Not logged in');
+        }
     });
 
 let currentUserCards;
 socket.on("game_state", (gameState) => {
     console.log(gameState);
     // const currentUserCards = gameState?.cards.filter(card => { -- change by troy
-        currentUserCards = gameState?.cards.filter(card => {
+    currentUserCards = gameState?.cards.filter(card => {
         return card.location === "HAND" && card.user_id === currentUser.user_id;
     }).sort((a, b) => a.order - b.order);
     for (const card of currentUserCards) {
@@ -75,18 +126,18 @@ socket.on('game_event', (gameEvent) => {
 
 //TODO
 //direction of play matters
-function addPlayer(user_id){
-    for(const opponent in gamePlayers){
-        if(!gamePlayers[opponent]){
+function addPlayer(user_id) {
+    for (const opponent in gamePlayers) {
+        if (!gamePlayers[opponent]) {
             gamePlayers[opponent] = user_id;
             break;
         }
     }
 }
 
-function removePlayer(user_id){
-    for (const opponent in gamePlayers){
-        if(gamePlayers[opponent] === user_id){
+function removePlayer(user_id) {
+    for (const opponent in gamePlayers) {
+        if (gamePlayers[opponent] === user_id) {
             gamePlayers[opponent] = "";
             break;
         }
@@ -174,15 +225,15 @@ function playCard(elem) {
     //     method: 'POST',
     //     credentials: 'include',
     //     body: JSON.stringify({
-            
+
     //     })
     // })
 
     discardPileCard();
     let seconds = .2;
-    elem.style.transition = "opacity "+seconds+"s ease";
+    elem.style.transition = "opacity " + seconds + "s ease";
     elem.style.opacity = 0;
-    setTimeout(function() {
+    setTimeout(function () {
         elem.remove();
     }, 300);
     //elem.remove();
