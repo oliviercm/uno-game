@@ -5,9 +5,7 @@ const gameId = searchParams.get("game_id");
 const message_container = document.querySelector('.chat-field')
 const messageButton = document.querySelector('.input-button')
 const input = document.querySelector('.input-field-chat')
-const socketgChat = io({
-    path: '/global-chat/',
-});
+
 const socket = io({
     path: "/games/",
     query: {
@@ -17,7 +15,7 @@ const socket = io({
 
 // GCHAT functions
 messageButton.addEventListener('click', addMessage);
-socketgChat.on('message', (data) => {
+socket.on('chat_message', (data) => {
     message_container.innerHTML += createContainer(data.username, data.message);
 });
 
@@ -36,7 +34,7 @@ function addMessage() {
                 message: input.value,
             }),
         };
-        fetch('/api/global-chat', message).catch((err) => console.log(err));
+        fetch(`/api/games/${gameId}/chat`, message).catch((err) => console.log(err));
         input.value = '';
         input.focus();
     }
@@ -272,7 +270,6 @@ function POSTCard() {
  */
 
 function discardPileCard(card) {
-    console.log("DISCARD WAS CALLED")
     let elem = document.getElementsByClassName("discard").item(0);
     let newCard = document.createElement("div");
     let randomDegree = Math.floor(Math.random() * 20) * (Math.round(Math.random()) ? 1 : -1);
