@@ -78,21 +78,24 @@ fetch('/api/users/current')
         }
     });
 
-let currentUserCards;
+
 socket.on("game_state", (gameState) => {
-    console.log(gameState);
+
     // const currentUserCards = gameState?.cards.filter(card => { -- change by troy
-    currentUserCards = gameState?.cards.filter(card => {
+    const currentUserCards = gameState?.cards.filter(card => {
         return card.location === "HAND" && card.user_id === currentUser.user_id;
     }).sort((a, b) => a.order - b.order);
     for (const card of currentUserCards) {
         // dealCard(CARD_FILE[card.color][card.value]); -- change by troy
         dealCard(card)
     }
-    console.log(currentUserCards);
+
+
+
 });
 
 socket.on('game_event', (gameEvent) => {
+    console.log(gameEvent)
     switch (gameEvent.type) {
         //Additional keys: user_id
         case "PLAYER_JOINED":
@@ -106,7 +109,7 @@ socket.on('game_event', (gameEvent) => {
             break;
         //Additional keys: user_id
         case "DEALT_CARD":
-            dealOpponentCard(user_id)
+            dealOpponentCard(user_id);
             break;
         case "GAME_DELETED":
             //?? what do we display here
@@ -117,6 +120,9 @@ socket.on('game_event', (gameEvent) => {
             //make 
             break;
         case "GAME_ENDED":
+            break;
+        case "CARD_PLAYED":
+            discardPileCard(gameEvent);
             break;
         default:
             console.log("Unrecognized ")
@@ -212,6 +218,7 @@ function dealOpponentCard(user_id) {
 
 //TODO
 //add timeout to play another card
+//NEEDS TO BE ABLE TO HANDLE chosen_wildcard_color
 function playCard(elem) {
     //TODO
     const num = parseInt(elem.id)
@@ -226,21 +233,17 @@ function playCard(elem) {
             "card_id": num
         })
     })
-    .then((response)=>{
-        if(response.status == 200){
-            discardPileCard(elem);
-            let seconds = .2;
-            elem.style.transition = "opacity " + seconds + "s ease";
-            elem.style.opacity = 0;
-            setTimeout(function () {
-                elem.remove();
-            }, 300);
-            //elem.remove();
-        } else {
-            alert(response.statusText)
-        }
-    })
+        .then((response) => {
+            if (response.status = 200) {
+         
+            }
+            else {
+                alert(response.statusText)
+            }
+        })
+     
 }
+
 
 
 function POSTCard() {
@@ -269,15 +272,13 @@ function POSTCard() {
  *              ∨
  */
 
-function discardPileCard(card) {
+ function discardPileCard() {
     let elem = document.getElementsByClassName("discard").item(0);
     let newCard = document.createElement("div");
     let randomDegree = Math.floor(Math.random() * 20) * (Math.round(Math.random()) ? 1 : -1);
     console.log(randomDegree);
     newCard.classList.add("card", "discardCard");
-    newCard.setAttribute('id', `${card.id}`) //added this --troy
-    // newCard.style.backgroundImage = "url(" + CARD_FILE.GREEN.FIVE + ")"; -- changed this troy
-    newCard.style.backgroundImage = card.style.backgroundImage
+    newCard.style.backgroundImage = "url(" + CARD_FILE.GREEN.FIVE + ")";
     newCard.animate([
         { transform: 'rotate(calc(' + randomDegree + 'deg' + ')) scale(1.5)' },
         { transform: 'rotate(calc(' + randomDegree + 'deg' + ')) scale(1)' }
