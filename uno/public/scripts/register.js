@@ -23,7 +23,7 @@ function register_execute() {
         document.location.href = '/';
       } else {
         document.location.reload();
-        alert('Incorrect Username/Password');
+        alert('This account already exists.');
       }
     })
     .catch((err) => console.log(err));

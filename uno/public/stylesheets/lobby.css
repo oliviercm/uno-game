@@ -63,6 +63,8 @@ body {
     width: 100vw;
     font-family: "Bree Serif", sans-serif;
     background-image: url('../assets/UnoBackground1.png');
+    background-repeat: no-repeat;
+    background-size: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -95,6 +97,7 @@ body {
 }
 
 .bot-left-side {
+    width: 450px;
     display: flex;
     align-items: flex-end;
     order: 1;
@@ -103,9 +106,8 @@ body {
 /* CHAT BOX */
 .container-chat {
 
-    max-width: 25vw;
+    width: 30vw;
     
-
   }
   
 button.accordion {
@@ -190,7 +192,7 @@ button.accordion:hover, button.accordion.is-open {
 
 .bot-center {
     order: 2;
-    width: 500px;
+    width: 700px;
     display: flex;
     justify-content: center;
     flex-direction: column;
@@ -226,10 +228,8 @@ button.accordion:hover, button.accordion.is-open {
     overflow-y: auto;
     background-color: white;
     flex-direction: column;
-
-
-
 }
+
 
 /* GAME CARDS */
 
@@ -245,9 +245,14 @@ button.accordion:hover, button.accordion.is-open {
     box-shadow: 3px 3px 5px #323232;
     border-radius: 3px 3px 3px 3px;
 
+}
 
-
-
+.game-card-id {
+    padding: 10px;
+    width: 40%;
+    top: 30%;
+    right: 10%;
+    /* background-color: red; */
 }
 
 /* END GAME CARDS */
@@ -257,6 +262,10 @@ button.accordion:hover, button.accordion.is-open {
     width: 25vw;
     display: flex;
     justify-content: center;
+    flex-direction: column;
+    position: relative;
+    top: -500px;
+    left: 100px;
 
 }
 
@@ -270,13 +279,13 @@ button.accordion:hover, button.accordion.is-open {
     border-color: #151515;
     border-width: 3px;
     border-radius: 5px;
-    background-color: #25bd20;
+    background-color: #f72a2a;
     box-shadow: 5px 5px 7px #323232;
 }
 
 .new-game-button:hover {
     font-family: 'Nunito Sans', sans-serif;
-    background-color: #126b0f;
+    background-color: #bf1d1d;
     
     
 }
@@ -319,32 +328,32 @@ button.accordion:hover, button.accordion.is-open {
     font-family: 'Nunito Sans', sans-serif;
     font-size: 15px;
     height: 30px;
-    width: 60%;
+    width: 30%;
     position:relative;
-    top: 65%;
+    top: -5%;
+    left: 63%;
     border-color: #151515;
     border-width: 3px;
     border-radius: 5px;
-    background-color: #25bd20;
-    box-shadow: 5px 5px 7px #323232;
+    background-color: #f7e754;
+    box-shadow: 3px 3px 5px #323232;
 }
 
 .join-game:hover {
     font-family: 'Nunito Sans', sans-serif;
-    background-color: #126b0f;
+    background-color: #ffe814;
     
     
 }
 
 .join-game:active {
     font-family: 'Nunito Sans', sans-serif;
-    background-color: #126b0f;
+    background-color: #ffe814;
     transform: translate(2px,2px);   
 }
 
 
 /* below is for chat messages */
-
 
     .comments-main{
     background: #FFF;
@@ -390,7 +399,7 @@ button.accordion:hover, button.accordion.is-open {
     font-weight: 300;
     }
     .comments .comment p {
-    font-size: 13px;
+    font-size: 20px;
     }
     .comments .comment p .reply {
     color: #BFBFA8;
@@ -398,24 +407,4 @@ button.accordion:hover, button.accordion.is-open {
     }
     .comments .comment .active {
     opacity: 1;
-    }
-    .icon-rocknroll {
-    background: none;
-    outline: none;
-    cursor: pointer;
-    margin: 0 .125rem 0 0;
-    }
-    .comments .comment:hover .icon-rocknroll,.comments .comment:hover .like-count {
-    opacity: 1;
-    }
-    .comment-box-main{
-    background: #CA1D5F;
-    }
-    @media (min-width: 320px) and (max-width: 480px){
-    .comments .comment h4 {
-    font-size: 12px;
-    }
-    .comments .comment p{
-    font-size: 11px;
-    }
     }
