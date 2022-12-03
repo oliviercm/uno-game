@@ -15,3 +15,15 @@ for (var i = 0; i < accordions.length; i++) {
     }
   };
 }
+
+var chatMessage = document.getElementById("input-field-chat");
+
+chatMessage.addEventListener("keypress", function(event) {
+  // If the user presses the "Enter" key on the keyboard
+  if (event.key === "Enter") {
+    // Cancel the default action, if needed
+    event.preventDefault();
+    // Trigger the button element with a click
+    document.getElementById("input-button").click();
+  }
+}); 

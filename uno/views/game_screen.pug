@@ -32,3 +32,14 @@ script(src='/socket.io/socket.io.js')
         .card.rightOpponentCard
         .card.rightOpponentCard
         .card.rightOpponentCard
+    .container-chat
+        .accordion-content
+            .chat-field
+            br
+            .input-container
+            input#input-field-chat.input-field-chat(type='text')
+            button#input-button.input-button SEND
+            br
+            br
+        button.accordion CHAT
+        script(src='/scripts/chatbox.js')

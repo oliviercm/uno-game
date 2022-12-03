@@ -1,4 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Lobster&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Nunito&family=Nunito+Sans:wght@700&display=swap');
+@import url('https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css');
 
 /* http://meyerweb.com/eric/tools/css/reset/ 
    v2.0 | 20110126
@@ -491,3 +493,148 @@ body {
 .topOpponentCard:not(:last-child) {
     margin-right: calc(3*-1vh);
 }
+
+/* CHAT */
+
+
+.container-chat {
+    z-index: 10;
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+}
+
+.container-chat {
+
+    width: 20vw;
+    
+  }
+  
+button.accordion {
+    font-family: 'Nunito Sans', sans-serif;
+    width: 100%;
+    background-color: #c9c9c9;
+    border-top: 2px solid #151515;
+    border-right: 2px solid #151515;
+    outline: none;
+    text-align: left;
+    padding: 10px 15px;
+    box-shadow: 5px 5px 7px #323232;
+    font-size: 15px;
+    color: black;
+    cursor: pointer;
+    border-radius: 0px 3px 0px 0px;
+    transition: background-color 0.2s linear;
+    
+}
+
+/* icon (before open) */
+button.accordion:after {
+    content: '\f077';
+    font-family: "fontawesome";
+    font-size: 14px;
+    float: right;
+}
+
+/* add icon */
+button.accordion.is-open:after {
+    content: '\f078';
+
+}
+
+button.accordion:hover, button.accordion.is-open {
+    background-color: #868686;
+}
+
+.accordion-content {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 20px;
+    width: 100%;
+    background-color: white;
+    border-left: 1px solid whitesmoke;
+    border-right: 1px solid #151515;
+    border-top: 1px solid #151515;
+    border-radius: 0px 5px 0px 0px;
+    box-shadow: 5px 5px 7px #323232;
+    padding: 0 20px;
+    max-height: 0;
+    overflow-y: auto;
+    transition: max-height 0.2s ease-in-out;
+}
+.input-container{
+    width: 100%;
+    border: 1px solid #a9a9a9;
+    display: inline-block;
+}
+.input-container input:focus, .input-container input:active {
+    outline: none;
+}
+.input-container input {
+    width: 90%;
+    border: none;
+}
+.input-field-chat {
+    width: 85%;
+}
+
+.input-container button {
+    float: right;
+    font-family: 'Nunito Sans', sans-serif;
+}
+
+/* chat messages */
+.comments-main{
+    background: #FFF;
+    }
+    .comment time, .comment:hover time,.icon-rocknroll, .like-count {
+    -webkit-transition: .25s opacity linear;
+    transition: .25s opacity linear;
+    }
+    .comments-main ul li{
+    list-style: none;
+    }
+    .comments .comment {
+    padding: 5px 10px;
+    background: #2bacfc;
+    }
+    .comments .comment:hover time{
+    opacity: 1;
+    }
+    .comments .user-img img {
+    width: 50px;
+    height: 50px;
+    }
+    .comments .comment h4 {
+    display: inline-block;
+    font-size: 16px;
+    }
+    .comments .comment h4 a {
+    color: #404040;
+    text-decoration: none;
+    }
+    .comments .comment .icon-rocknroll {
+    color: #545454;
+    font-size: .85rem;
+    }
+    .comments .comment .icon-rocknroll:hover {
+    opacity: .5;
+    }
+    .comments .comment time,.comments .comment .like-count,.comments .comment .icon-rocknroll {
+    font-size: .75rem;
+    opacity: 0;
+    }
+    .comments .comment time, .comments .comment .like-count {
+    font-weight: 300;
+    }
+    .comments .comment p {
+    font-size: 20px;
+    }
+    .comments .comment p .reply {
+    color: #BFBFA8;
+    cursor: pointer;
+    }
+    .comments .comment .active {
+    opacity: 1;
+    }
+
+/* END CHAT */
