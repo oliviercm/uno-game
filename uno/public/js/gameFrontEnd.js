@@ -80,7 +80,7 @@ fetch('/api/users/current')
 
 
 socket.on("game_state", (gameState) => {
-
+    console.log(gameState)
     // const currentUserCards = gameState?.cards.filter(card => { -- change by troy
     const currentUserCards = gameState?.cards.filter(card => {
         return card.location === "HAND" && card.user_id === currentUser.user_id;
@@ -90,6 +90,18 @@ socket.on("game_state", (gameState) => {
         dealCard(card)
     }
 
+    const discardPile = gameState?.cards.filter(card => {
+        return card.location === "DISCARD"})
+        
+    let topCard = discardPile[0] 
+    for (const card of discardPile){
+        if(topCard.order < card.order){
+            topCard = card
+        }
+    }
+
+        console.log(topCard)
+        discardPileCard(topCard);
 
 
 });
@@ -271,8 +283,8 @@ function POSTCard() {
  *            \   /
  *              ∨
  */
-
- function discardPileCard() {
+//NATHANS ORIGINAL
+ function NATHANdiscardPileCard() {
     let elem = document.getElementsByClassName("discard").item(0);
     let newCard = document.createElement("div");
     let randomDegree = Math.floor(Math.random() * 20) * (Math.round(Math.random()) ? 1 : -1);
@@ -289,3 +301,20 @@ function POSTCard() {
     newCard.style.transform = 'rotate(calc(' + randomDegree + 'deg' + '))'
     elem.appendChild(newCard);
 }
+//TROYS MODIFIED
+function discardPileCard(card) {
+    let elem = document.getElementsByClassName("card discardCard").item(0);
+    console.log(elem)
+    let randomDegree = Math.floor(Math.random() * 20) * (Math.round(Math.random()) ? 1 : -1);
+    console.log(randomDegree);
+    elem.style.backgroundImage = "url(" + CARD_FILE[card.color][card.value]+ ")";
+    elem.animate([
+        { transform: 'rotate(calc(' + randomDegree + 'deg' + ')) scale(1.5)' },
+        { transform: 'rotate(calc(' + randomDegree + 'deg' + ')) scale(1)' }
+    ], {
+        duration: 300,
+        iterations: 1
+    })
+    elem.style.transform = 'rotate(calc(' + randomDegree + 'deg' + '))'
+}
+
