@@ -115,6 +115,7 @@ class Game {
       const gameState = {
         started: game.started,
         ended: game.ended,
+        chosen_wildcard_color: game.chosen_wildcard_color,
         users: gameUsers,
         cards: gameCards,
       };
@@ -124,7 +125,7 @@ class Game {
   }
 
   async getGame(transaction) {
-    const game = await (transaction ?? db).one("SELECT started, ended FROM games WHERE game_id = $1", [
+    const game = await (transaction ?? db).one("SELECT started, ended, chosen_wildcard_color FROM games WHERE game_id = $1", [
       this.id,
     ]);
     return game;
