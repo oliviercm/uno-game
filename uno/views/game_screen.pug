@@ -2,6 +2,7 @@ doctype html
 head
     meta(charset='UTF-8')
     link(rel='stylesheet' href='stylesheets/game.css')
+    link(rel='stylesheet' href='stylesheets/chooseColor.css')
     script(defer, src="js/gameFrontEnd.js" type="module")
     title Home
 script(src='/socket.io/socket.io.js')
@@ -44,3 +45,19 @@ script(src='/socket.io/socket.io.js')
             br
         button.accordion CHAT
         script(src='/scripts/chatbox.js')
+
+    a.modal-open(href='#modal') Click To Open Regular Modal
+    #modal.modal
+        .modal-content
+            a.modal-close(href='#' title='Close Modal') X
+            h1 Choose a Color
+            .modal-area
+                button#redbttn.choosebttn Click Me
+                button#bluebttn.choosebttn Click Me
+                button#yellowbttn.choosebttn Click Me
+                button#greenbttn.choosebttn Click Me
+
+
+
+
+
