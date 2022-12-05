@@ -58,7 +58,7 @@ function createContainer(username, message) {
 }
 
 
-//Game State  
+//  GAME STATE
 const gamePlayers = {
     leftOpponent: "",
     topOpponent: "",
@@ -81,7 +81,12 @@ fetch('/api/users/current')
 
 socket.on("game_state", (gameState) => {
     console.log(gameState)
-    // const currentUserCards = gameState?.cards.filter(card => { -- change by troy
+    
+    const deleteAssets = document.getElementById("myHand")
+
+        while (deleteAssets.firstChild) {
+            deleteAssets.removeChild(deleteAssets.firstChild);
+        }
     const currentUserCards = gameState?.cards.filter(card => {
         return card.location === "HAND" && card.user_id === currentUser.user_id;
     }).sort((a, b) => a.order - b.order);
@@ -91,17 +96,19 @@ socket.on("game_state", (gameState) => {
     }
 
     const discardPile = gameState?.cards.filter(card => {
-        return card.location === "DISCARD"})
-        
-    let topCard = discardPile[0] 
-    for (const card of discardPile){
-        if(topCard.order < card.order){
+        return card.location === "DISCARD"
+    })
+
+    let topCard = discardPile[0]
+    for (const card of discardPile) {
+        if (topCard.order < card.order) {
             topCard = card
         }
     }
 
-        console.log(topCard)
-        discardPileCard(topCard);
+    
+    discardPileCard(topCard);
+    
 
 
 });
@@ -247,13 +254,13 @@ function playCard(elem) {
     })
         .then((response) => {
             if (response.status = 200) {
-         
+
             }
             else {
                 alert(response.statusText)
             }
         })
-     
+
 }
 
 
@@ -284,7 +291,7 @@ function POSTCard() {
  *              ∨
  */
 //NATHANS ORIGINAL
- function NATHANdiscardPileCard() {
+function NATHANdiscardPileCard() {
     let elem = document.getElementsByClassName("discard").item(0);
     let newCard = document.createElement("div");
     let randomDegree = Math.floor(Math.random() * 20) * (Math.round(Math.random()) ? 1 : -1);
@@ -307,7 +314,7 @@ function discardPileCard(card) {
     console.log(elem)
     let randomDegree = Math.floor(Math.random() * 20) * (Math.round(Math.random()) ? 1 : -1);
     console.log(randomDegree);
-    elem.style.backgroundImage = "url(" + CARD_FILE[card.color][card.value]+ ")";
+    elem.style.backgroundImage = "url(" + CARD_FILE[card.color][card.value] + ")";
     elem.animate([
         { transform: 'rotate(calc(' + randomDegree + 'deg' + ')) scale(1.5)' },
         { transform: 'rotate(calc(' + randomDegree + 'deg' + ')) scale(1)' }
