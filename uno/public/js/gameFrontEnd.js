@@ -5,6 +5,7 @@ const gameId = searchParams.get("game_id");
 const message_container = document.querySelector('.chat-field')
 const messageButton = document.querySelector('.input-button')
 const input = document.querySelector('.input-field-chat')
+const wildcardButtonContainer = document.querySelector(".wildcardButtonContainer")
 
 const socket = io({
     path: "/games/",
@@ -81,12 +82,12 @@ fetch('/api/users/current')
 
 socket.on("game_state", (gameState) => {
     console.log(gameState)
-    
+
     const deleteAssets = document.getElementById("myHand")
 
-        while (deleteAssets.firstChild) {
-            deleteAssets.removeChild(deleteAssets.firstChild);
-        }
+    while (deleteAssets.firstChild) {
+        deleteAssets.removeChild(deleteAssets.firstChild);
+    }
     const currentUserCards = gameState?.cards.filter(card => {
         return card.location === "HAND" && card.user_id === currentUser.user_id;
     }).sort((a, b) => a.order - b.order);
@@ -106,9 +107,9 @@ socket.on("game_state", (gameState) => {
         }
     }
 
-    
+
     discardPileCard(topCard);
-    
+
 
 
 });
@@ -216,7 +217,11 @@ function dealCard(card) {
     newCard.classList.add("card", "myCard");
     newCard.setAttribute('id', `${card.card_id}`)
     newCard.style.backgroundImage = "url(" + CARD_FILE[card.color][card.value] + ")";
-    newCard.addEventListener("click", function () { playCard(newCard); }, false);
+    if (card.color === "BLACK") {
+        newCard.addEventListener("click", function () { wildcard(newCard); }, false);
+    } else {
+        newCard.addEventListener("click", function () { playCard(newCard, null); }, false);
+    }
     elem.appendChild(newCard);
 }
 
@@ -238,28 +243,57 @@ function dealOpponentCard(user_id) {
 //TODO
 //add timeout to play another card
 //NEEDS TO BE ABLE TO HANDLE chosen_wildcard_color
-function playCard(elem) {
+function playCard(elem, color) {
     //TODO
     const num = parseInt(elem.id)
     const query = `/api/games/${gameId}/play-card`
-    fetch(query, {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            "card_id": num
-        })
-    })
-        .then((response) => {
-            if (response.status = 200) {
 
-            }
-            else {
-                alert(response.statusText)
-            }
-        })
+    let request;
+
+    if (color != null) {
+        while (wildcardButtonContainer.firstChild) {
+            wildcardButtonContainer.removeChild(wildcardButtonContainer.firstChild);
+        }
+        request = {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "card_id": num,
+                "chosen_wildcard_color": color
+            })
+        }
+    } else {
+        request = {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "card_id": num,
+            })
+        }
+    }
+
+    fetch(query, request)
+      
+
+}
+
+function wildcard(card) {
+    const colors= ["RED", "YELLOW", "BLUE", "GREEN"];
+
+    for (const color of colors) {
+        console.log(color)
+        let newCard = document.createElement("div");
+        newCard.classList.add("wildcardButton");
+        newCard.innerText = color
+        newCard.addEventListener("click", function () { playCard(card, color); }, false);
+        wildcardButtonContainer.appendChild(newCard);
+    }
 
 }
 
@@ -290,25 +324,7 @@ function POSTCard() {
  *            \   /
  *              ∨
  */
-//NATHANS ORIGINAL
-function NATHANdiscardPileCard() {
-    let elem = document.getElementsByClassName("discard").item(0);
-    let newCard = document.createElement("div");
-    let randomDegree = Math.floor(Math.random() * 20) * (Math.round(Math.random()) ? 1 : -1);
-    console.log(randomDegree);
-    newCard.classList.add("card", "discardCard");
-    newCard.style.backgroundImage = "url(" + CARD_FILE.GREEN.FIVE + ")";
-    newCard.animate([
-        { transform: 'rotate(calc(' + randomDegree + 'deg' + ')) scale(1.5)' },
-        { transform: 'rotate(calc(' + randomDegree + 'deg' + ')) scale(1)' }
-    ], {
-        duration: 300,
-        iterations: 1
-    })
-    newCard.style.transform = 'rotate(calc(' + randomDegree + 'deg' + '))'
-    elem.appendChild(newCard);
-}
-//TROYS MODIFIED
+
 function discardPileCard(card) {
     let elem = document.getElementsByClassName("card discardCard").item(0);
     console.log(elem)
