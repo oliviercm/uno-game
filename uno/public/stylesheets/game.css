@@ -254,6 +254,48 @@ body {
     filter: brightness(70%);
 }
 
+/* FOR CHOSEN WILDCARD BUTTON TESTING */
+
+.wildcardButtonContainer{
+    /* visibility: hidden; */
+    position: absolute;
+    cursor: pointer;
+    border-radius: 100px;
+    background-color: rgba(10, 10, 10, .7);
+    transition: 200ms ease-in;
+    top: 65%;
+    right: 46%;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    flex-direction: column;
+}
+.wildcardButtonContainer:hover{
+    transform: rotate(-10deg) scale(0.9);
+}
+
+.wildcardButton {
+    z-index: 1;
+    display: block;
+    cursor: pointer;
+    border-color: transparent;
+    backface-visibility: hidden;
+    text-align: center;
+    text-decoration: none;
+    font-family: Lobster;
+    font-size: 4rem;
+    top: 65%;
+    right: 46%;
+    background-image: linear-gradient(to left, blue, green, yellow, orange, red);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(2px 2px #333);
+}
+
+.unoButton:hover {
+    filter: brightness(70%);
+}
+
 .youDidNotSayUnoButtonContainer{
     visibility: hidden;
     position: absolute;
