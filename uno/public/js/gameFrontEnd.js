@@ -95,7 +95,6 @@ socket.on('game_state', (gameState) => {
     })
     .sort((a, b) => a.order - b.order);
   for (const card of currentUserCards) {
-    // dealCard(CARD_FILE[card.color][card.value]); -- change by troy
     dealCard(card);
   }
 
@@ -211,8 +210,7 @@ function takeAndDeal() {
  */
 
 function dealCard(card) {
-  //TODO
-  //Get top card of database deck and assign specific card background
+
   let elem = document.getElementById('myHand');
   let newCard = document.createElement('div');
   newCard.classList.add('card', 'myCard');
@@ -259,7 +257,6 @@ function dealOpponentCard(user_id) {
 
 //TODO
 //add timeout to play another card
-//NEEDS TO BE ABLE TO HANDLE chosen_wildcard_color
 function playCard(elem, color) {
   //TODO
   const num = parseInt(elem.id);
