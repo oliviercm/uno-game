@@ -133,7 +133,7 @@ class Game {
 
   async getGameUsers(transaction) {
     const gameUsers = await (transaction ?? db).manyOrNone(`
-      SELECT user_id, play_order, state, is_host
+      SELECT user_id, username, play_order, state, is_host
         FROM game_users
         INNER JOIN users USING(user_id)
         WHERE game_id = $1`, [
