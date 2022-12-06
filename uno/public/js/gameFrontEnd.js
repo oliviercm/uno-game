@@ -1,47 +1,52 @@
-import { CARD_FILE } from "./resources.js";
+import { CARD_FILE } from './resources.js';
 
 const searchParams = new URLSearchParams(window.location.search);
-const gameId = searchParams.get("game_id");
-const message_container = document.querySelector('.chat-field')
-const messageButton = document.querySelector('.input-button')
-const input = document.querySelector('.input-field-chat')
+const gameId = searchParams.get('game_id');
+const message_container = document.querySelector('.chat-field');
+const messageButton = document.querySelector('.input-button');
+const input = document.querySelector('.input-field-chat');
+const wildcardButtonContainer = document.querySelector(
+  '.wildcardButtonContainer'
+);
 
 const socket = io({
-    path: "/games/",
-    query: {
-        game_id: gameId,
-    },
+  path: '/games/',
+  query: {
+    game_id: gameId,
+  },
 });
 
 // GCHAT functions
 messageButton.addEventListener('click', addMessage);
 socket.on('chat_message', (data) => {
-    message_container.innerHTML += createContainer(data.username, data.message);
+  message_container.innerHTML += createContainer(data.username, data.message);
 });
 
 function addMessage() {
-    if (input.value === '') {
-        return;
-    } else {
-        var message = {
-            method: 'POST',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-                message: input.value,
-            }),
-        };
-        fetch(`/api/games/${gameId}/chat`, message).catch((err) => console.log(err));
-        input.value = '';
-        input.focus();
-    }
+  if (input.value === '') {
+    return;
+  } else {
+    var message = {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        message: input.value,
+      }),
+    };
+    fetch(`/api/games/${gameId}/chat`, message).catch((err) =>
+      console.log(err)
+    );
+    input.value = '';
+    input.focus();
+  }
 }
 
 function createContainer(username, message) {
-    return `
+  return `
   <div class="row comments mb-2">
   <div class="col-md-2 col-sm-2 col-3 text-center user-img">
   <p>&nbsp</p>
@@ -57,92 +62,110 @@ function createContainer(username, message) {
   `;
 }
 
-
-//Game State  
+//  GAME STATE
 const gamePlayers = {
-    leftOpponent: "",
-    topOpponent: "",
-    rightOpponent: ""
+  leftOpponent: '',
+  topOpponent: '',
+  rightOpponent: '',
 };
 
 let currentUser;
-fetch('/api/users/current')
-    .then((response) => {
-        if (response.status == 200) {
-            response.json().then(data => {
-                currentUser = data.user;
-                console.log(currentUser);
-            });
-        } else {
-            alert('Not logged in');
-        }
+fetch('/api/users/current').then((response) => {
+  if (response.status == 200) {
+    response.json().then((data) => {
+      currentUser = data.user;
+      console.log(currentUser);
     });
+  } else {
+    alert('Not logged in');
+  }
+});
 
-let currentUserCards;
-socket.on("game_state", (gameState) => {
-    console.log(gameState);
-    // const currentUserCards = gameState?.cards.filter(card => { -- change by troy
-    currentUserCards = gameState?.cards.filter(card => {
-        return card.location === "HAND" && card.user_id === currentUser.user_id;
-    }).sort((a, b) => a.order - b.order);
-    for (const card of currentUserCards) {
-        // dealCard(CARD_FILE[card.color][card.value]); -- change by troy
-        dealCard(card)
+socket.on('game_state', (gameState) => {
+  console.log(gameState);
+
+  const deleteAssets = document.getElementById('myHand');
+
+  while (deleteAssets.firstChild) {
+    deleteAssets.removeChild(deleteAssets.firstChild);
+  }
+  const currentUserCards = gameState?.cards
+    .filter((card) => {
+      return card.location === 'HAND' && card.user_id === currentUser.user_id;
+    })
+    .sort((a, b) => a.order - b.order);
+  for (const card of currentUserCards) {
+    dealCard(card);
+  }
+
+  const discardPile = gameState?.cards.filter((card) => {
+    return card.location === 'DISCARD';
+  });
+
+  let topCard = discardPile[0];
+  for (const card of discardPile) {
+    if (topCard.order < card.order) {
+      topCard = card;
     }
-    console.log(currentUserCards);
+  }
+
+  discardPileCard(topCard);
 });
 
 socket.on('game_event', (gameEvent) => {
-    switch (gameEvent.type) {
-        //Additional keys: user_id
-        case "PLAYER_JOINED":
-            break;
-        //Additional keys: user_id
-        case "PLAYER_LEFT":
-        case "PLAYER_FORFEIT":
-            break;
-        case "DECK_SHUFFLED":
-            replenishDeck();
-            break;
-        //Additional keys: user_id
-        case "DEALT_CARD":
-            dealOpponentCard(user_id)
-            break;
-        case "GAME_DELETED":
-            //?? what do we display here
-            // TODO: display message "the host has ended the game", redirect to lobby
-            break;
-        case "GAME_STARTED":
-            //TODO
-            //make 
-            break;
-        case "GAME_ENDED":
-            break;
-        default:
-            console.log("Unrecognized ")
-    }
-})
+  console.log(gameEvent);
+  switch (gameEvent.type) {
+    //Additional keys: user_id
+    case 'PLAYER_JOINED':
+      break;
+    //Additional keys: user_id
+    case 'PLAYER_LEFT':
+    case 'PLAYER_FORFEIT':
+      break;
+    case 'DECK_SHUFFLED':
+      replenishDeck();
+      break;
+    //Additional keys: user_id
+    case 'DEALT_CARD':
+      dealOpponentCard(user_id);
+      break;
+    case 'GAME_DELETED':
+      //?? what do we display here
+      // TODO: display message "the host has ended the game", redirect to lobby
+      break;
+    case 'GAME_STARTED':
+      //TODO
+      //make
+      break;
+    case 'GAME_ENDED':
+      break;
+    case 'CARD_PLAYED':
+      discardPileCard(gameEvent);
+      break;
+    default:
+      console.log('Unrecognized ');
+  }
+});
 
 //TODO
 //direction of play matters
 function addPlayer(user_id) {
-    for (const opponent in gamePlayers) {
-        if (!gamePlayers[opponent]) {
-            gamePlayers[opponent] = user_id;
-            break;
-        }
+  for (const opponent in gamePlayers) {
+    if (!gamePlayers[opponent]) {
+      gamePlayers[opponent] = user_id;
+      break;
     }
+  }
 }
 
 function removePlayer(user_id) {
-    for (const opponent in gamePlayers) {
-        if (gamePlayers[opponent] === user_id) {
-            gamePlayers[opponent] = "";
-            break;
-        }
+  for (const opponent in gamePlayers) {
+    if (gamePlayers[opponent] === user_id) {
+      gamePlayers[opponent] = '';
+      break;
     }
+  }
 }
-
 
 let lastDeckCard;
 replenishDeck();
@@ -150,29 +173,32 @@ replenishDeck();
 //TODO
 //get number of cards reshuffled (maybe from DECK_RESHUFFLED io event)
 function replenishDeck(deckSize) {
-    if (!deckSize) {
-        deckSize = 80
-        //TODO
-        //based on 7 cards dealt to FOUR players
-        //get number of players? or localize a value
-    }
+  if (!deckSize) {
+    deckSize = 80;
+    //TODO
+    //based on 7 cards dealt to FOUR players
+    //get number of players? or localize a value
+  }
 
-    for (let i = 0; i < deckSize; i++) {
-        let elem = document.getElementsByClassName("deckContainer").item(0);
-        let newCard = document.createElement("div");
-        newCard.classList.add("card", "deckCard");
-        elem.appendChild(newCard);
-    }
-    lastDeckCard = document.getElementsByClassName("deckContainer").item(0).lastChild;
-    lastDeckCard.addEventListener("click", takeAndDeal, false);
+  for (let i = 0; i < deckSize; i++) {
+    let elem = document.getElementsByClassName('deckContainer').item(0);
+    let newCard = document.createElement('div');
+    newCard.classList.add('card', 'deckCard');
+    elem.appendChild(newCard);
+  }
+  lastDeckCard = document
+    .getElementsByClassName('deckContainer')
+    .item(0).lastChild;
+  lastDeckCard.addEventListener('click', takeAndDeal, false);
 }
 
-
 function takeAndDeal() {
-    lastDeckCard.remove()
-    lastDeckCard = document.getElementsByClassName("deckContainer").item(0).lastChild;
-    dealCard();
-    lastDeckCard.addEventListener("click", takeAndDeal, false);
+  lastDeckCard.remove();
+  lastDeckCard = document
+    .getElementsByClassName('deckContainer')
+    .item(0).lastChild;
+  dealCard();
+  lastDeckCard.addEventListener('click', takeAndDeal, false);
 }
 
 /**
@@ -184,22 +210,41 @@ function takeAndDeal() {
  */
 
 function dealCard(card) {
-    //TODO
-    //Get top card of database deck and assign specific card background
-    let elem = document.getElementById("myHand");
-    let newCard = document.createElement("div");
-    newCard.classList.add("card", "myCard");
-    newCard.setAttribute('id', `${card.card_id}`)
-    newCard.style.backgroundImage = "url(" + CARD_FILE[card.color][card.value] + ")";
-    newCard.addEventListener("click", function () { playCard(newCard); }, false);
-    elem.appendChild(newCard);
+
+  let elem = document.getElementById('myHand');
+  let newCard = document.createElement('div');
+  newCard.classList.add('card', 'myCard');
+  newCard.setAttribute('id', `${card.card_id}`);
+  newCard.style.backgroundImage =
+    'url(' + CARD_FILE[card.color][card.value] + ')';
+  if (card.color === 'BLACK') {
+    newCard.addEventListener(
+      'click',
+      function () {
+        window.location.href = '#modal';
+        wildcard(newCard);
+      },
+      false
+    );
+  } else {
+    newCard.addEventListener(
+      'click',
+      function () {
+        playCard(newCard, null);
+      },
+      false
+    );
+  }
+  elem.appendChild(newCard);
 }
 
 function dealOpponentCard(user_id) {
-    const key = Object.keys(gamePlayers).find(user_id => obj[user_id] === value);
-    const elem = getElementById(key);
-    let newCard = document.createElement("div");
-    newCard.classList.add("card", key + "card")
+  const key = Object.keys(gamePlayers).find(
+    (user_id) => obj[user_id] === value
+  );
+  const elem = getElementById(key);
+  let newCard = document.createElement('div');
+  newCard.classList.add('card', key + 'card');
 }
 
 /**
@@ -212,53 +257,88 @@ function dealOpponentCard(user_id) {
 
 //TODO
 //add timeout to play another card
-function playCard(elem) {
-    //TODO
-    const num = parseInt(elem.id)
-    const query = `/api/games/${gameId}/play-card`
-    fetch(query, {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            "card_id": num
-        })
-    })
-    .then((response)=>{
-        if(response.status == 200){
-            discardPileCard(elem);
-            let seconds = .2;
-            elem.style.transition = "opacity " + seconds + "s ease";
-            elem.style.opacity = 0;
-            setTimeout(function () {
-                elem.remove();
-            }, 300);
-            //elem.remove();
-        } else {
-            alert(response.statusText)
-        }
-    })
+function playCard(elem, color) {
+  //TODO
+  const num = parseInt(elem.id);
+  const query = `/api/games/${gameId}/play-card`;
+
+  let request;
+
+  if (color != null) {
+    while (wildcardButtonContainer.firstChild) {
+      wildcardButtonContainer.removeChild(wildcardButtonContainer.firstChild);
+    }
+    request = {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        card_id: num,
+        chosen_wildcard_color: color,
+      }),
+    };
+  } else {
+    request = {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        card_id: num,
+      }),
+    };
+  }
+
+  fetch(query, request);
 }
 
+function wildcard(card) {
+  const redButton = document.getElementById('redbttn');
+  const blueButton = document.getElementById('bluebttn');
+  const yellowButton = document.getElementById('yellowbttn');
+  const greenButton = document.getElementById('greenbttn');
+
+  redButton.addEventListener('click', function () {
+    console.log('RED picked');
+    playCard(card, 'RED');
+    window.location.href = '#';
+  });
+  blueButton.addEventListener('click', function () {
+    console.log('BLUE picked');
+    playCard(card, 'BLUE');
+    window.location.href = '#';
+  });
+  yellowButton.addEventListener('click', function () {
+    console.log('YELLOW picked');
+    playCard(card, 'YELLOW');
+    window.location.href = '#';
+  });
+  greenButton.addEventListener('click', function () {
+    console.log('GREEN picked');
+    playCard(card, 'GREEN');
+    window.location.href = '#';
+  });
+}
 
 function POSTCard() {
-    var card = {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-            "message": input.value
-        })
-    }
-    fetch('/api/global-chat', message)
+  var card = {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({
+      message: input.value,
+    }),
+  };
+  fetch('/api/global-chat', message);
 
-    input.value = '';
-    input.focus();
+  input.value = '';
+  input.focus();
 }
 
 /**
@@ -270,21 +350,21 @@ function POSTCard() {
  */
 
 function discardPileCard(card) {
-    let elem = document.getElementsByClassName("discard").item(0);
-    let newCard = document.createElement("div");
-    let randomDegree = Math.floor(Math.random() * 20) * (Math.round(Math.random()) ? 1 : -1);
-    console.log(randomDegree);
-    newCard.classList.add("card", "discardCard");
-    newCard.setAttribute('id', `${card.id}`) //added this --troy
-    // newCard.style.backgroundImage = "url(" + CARD_FILE.GREEN.FIVE + ")"; -- changed this troy
-    newCard.style.backgroundImage = card.style.backgroundImage
-    newCard.animate([
-        { transform: 'rotate(calc(' + randomDegree + 'deg' + ')) scale(1.5)' },
-        { transform: 'rotate(calc(' + randomDegree + 'deg' + ')) scale(1)' }
-    ], {
-        duration: 300,
-        iterations: 1
-    })
-    newCard.style.transform = 'rotate(calc(' + randomDegree + 'deg' + '))'
-    elem.appendChild(newCard);
+  let elem = document.getElementsByClassName('card discardCard').item(0);
+  console.log(elem);
+  let randomDegree =
+    Math.floor(Math.random() * 20) * (Math.round(Math.random()) ? 1 : -1);
+  console.log(randomDegree);
+  elem.style.backgroundImage = 'url(' + CARD_FILE[card.color][card.value] + ')';
+  elem.animate(
+    [
+      { transform: 'rotate(calc(' + randomDegree + 'deg' + ')) scale(1.5)' },
+      { transform: 'rotate(calc(' + randomDegree + 'deg' + ')) scale(1)' },
+    ],
+    {
+      duration: 300,
+      iterations: 1,
+    }
+  );
+  elem.style.transform = 'rotate(calc(' + randomDegree + 'deg' + '))';
 }

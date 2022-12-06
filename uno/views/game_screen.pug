@@ -2,12 +2,14 @@ doctype html
 head
     meta(charset='UTF-8')
     link(rel='stylesheet' href='stylesheets/game.css')
+    link(rel='stylesheet' href='stylesheets/chooseColor.css')
     script(defer, src="js/gameFrontEnd.js" type="module")
     title Home
 script(src='/socket.io/socket.io.js')
 .gameScreenContainer
     .discard
         a Discard Pile
+        .card.discardCard
     .deck
         a.reshuffleText Deck Empty
         button.reshuffle(type="button") Reshuffle
@@ -32,6 +34,7 @@ script(src='/socket.io/socket.io.js')
         .card.rightOpponentCard
         .card.rightOpponentCard
         .card.rightOpponentCard
+    .wildcardButtonContainer
     .container-chat
         .accordion-content
             .chat-field
@@ -43,3 +46,18 @@ script(src='/socket.io/socket.io.js')
             br
         button.accordion CHAT
         script(src='/scripts/chatbox.js')
+
+    a.modal-open(href='#modal')
+    #modal.modal
+        .modal-content
+            a.modal-close(href='#' title='Close Modal') X
+            h1 Choose a Color
+            .modal-area
+                button#redbttn.choosebttn RED
+                button#bluebttn.choosebttn BLUE
+                button#yellowbttn.choosebttn YELLOW
+                button#greenbttn.choosebttn GREEN
+
+
+
+

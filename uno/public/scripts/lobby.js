@@ -95,13 +95,13 @@ function createGameCard(game_id) {
 }
 
 function startGame() {
+    window.location.href = `/game?game_id=${globalgame_id}`;
     const query = `/api/games/${globalgame_id}/start`;
     fetch(query, {
         method: 'POST',
         credentials: 'include',
     }).then((response) => {
         if (response.status == 200) {
-            window.location.href = `/game?game_id=${globalgame_id}`;
         } else {
             alert('ERROR');
         }
