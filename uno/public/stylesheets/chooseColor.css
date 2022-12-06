@@ -24,12 +24,8 @@ p {
 
 a.modal-open {
   display:block;
-  padding:20px;
-  color:#424242;
   font-weight:bold;
-  width:100px;
   background:#e0e0e0;
-  border-radius:2px;
   text-align:center;
   text-decoration:none;
 }
