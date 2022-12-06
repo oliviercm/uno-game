@@ -86,11 +86,9 @@ fetch('/api/users/current').then((response) => {
   }
 });
 
-socket.on('game_state', (gameState) => {
-  console.log(gameState);
 
 socket.on("game_state", (gameState) => {
-    //TODO
+    console.log(gameState)
     //small issue with play order, if the player refreshes then the
     const currentOpponents = gameState?.users.filter(opponent => {
         return opponent.user_id !== currentUser.user_id;
@@ -105,7 +103,7 @@ socket.on("game_state", (gameState) => {
             });
         }
     }
-    console.log(gameState)
+
 
     const deleteAssets = document.getElementById("myHand")
 
@@ -350,24 +348,6 @@ function wildcard(card) {
     playCard(card, 'GREEN');
     window.location.href = '#';
   });
-}
-
-function POSTCard() {
-  var card = {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include',
-    body: JSON.stringify({
-      message: input.value,
-    }),
-  };
-  fetch('/api/global-chat', message);
-
-  input.value = '';
-  input.focus();
 }
 
 /**
