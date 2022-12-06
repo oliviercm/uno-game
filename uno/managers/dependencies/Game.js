@@ -68,24 +68,24 @@ class Game {
       cards,
       ...restOfGameState
     } = gameState;
-    const largestOrderInDiscardPile = cards
-      .filter(card => card.location === "DISCARD")
-      .reduce((largestOrder, currentCard) => {
-        if (!largestOrder || currentCard.order > largestOrder) {
-          return currentCard.order;
-        } else {
-          return largestOrder;
-        }
-      }, null);
+    // const largestOrderInDiscardPile = cards
+    //   .filter(card => card.location === "DISCARD")
+    //   .reduce((largestOrder, currentCard) => {
+    //     if (!largestOrder || currentCard.order > largestOrder) {
+    //       return currentCard.order;
+    //     } else {
+    //       return largestOrder;
+    //     }
+    //   }, null);
     const sanitizedGameState = {
       cards: cards.map(card => {
         // The user can only see their own cards, and the top card of the discard pile.
-        if (card.user_id === userId) {
+        if (card.user_id === userId || card.location === "DISCARD") {
           return card;
         }
-        if (card.location === "DISCARD" && card.order === largestOrderInDiscardPile) {
-          return card;
-        }
+        // if (card.location === "DISCARD" && card.order === largestOrderInDiscardPile) {
+        //   return card;
+        // }
         // Otherwise, the card's card_id (color and value can be determined from card_id), color, and value should be hidden to the user.
         const {
           card_id,
@@ -132,7 +132,7 @@ class Game {
 
   async getGameUsers(transaction) {
     const gameUsers = await (transaction ?? db).manyOrNone(`
-      SELECT user_id, play_order, state, is_host
+      SELECT user_id, username, play_order, state, is_host
         FROM game_users
         INNER JOIN users USING(user_id)
         WHERE game_id = $1`, [

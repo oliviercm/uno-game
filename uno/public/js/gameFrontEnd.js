@@ -66,6 +66,11 @@ const gamePlayers = {
     rightOpponent: ""
 };
 
+let discardPileDegree = [];
+for (let i = 0; i < 108; i++) {
+    discardPileDegree.push(Math.floor(Math.random() * 20) * (Math.round(Math.random()) ? 1 : -1));
+}
+
 let currentUser;
 fetch('/api/users/current')
     .then((response) => {
@@ -81,6 +86,21 @@ fetch('/api/users/current')
 
 
 socket.on("game_state", (gameState) => {
+    //TODO
+    //small issue with play order, if the player refreshes then the
+    const currentOpponents = gameState?.users.filter(opponent => {
+        return opponent.user_id !== currentUser.user_id;
+    }).sort((a, b) => a.play_order - b.play_order);
+
+    for (let opponent of currentOpponents) {
+        if (!gamePlayers[opponent]) {
+            Object.keys(gamePlayers).forEach(key => {
+                if (gamePlayers[key] === "") {
+                    gamePlayers[key] = opponent;
+                }
+            });
+        }
+    }
     console.log(gameState)
 
     const deleteAssets = document.getElementById("myHand")
@@ -89,26 +109,29 @@ socket.on("game_state", (gameState) => {
         deleteAssets.removeChild(deleteAssets.firstChild);
     }
     const currentUserCards = gameState?.cards.filter(card => {
-        return card.location === "HAND" && card.user_id === currentUser.user_id;
+        return card.user_id === currentUser.user_id;
     }).sort((a, b) => a.order - b.order);
     for (const card of currentUserCards) {
         // dealCard(CARD_FILE[card.color][card.value]); -- change by troy
         dealCard(card)
     }
 
+    Object.keys(gamePlayers).forEach(key => {
+        if (gamePlayers[key] !== "") {
+            const currentOpponentCards = gameState?.cards.filter(card => {
+                return card.user_id === gamePlayers[key];
+            })
+            for (const card of currentOpponentCards) {
+                dealOpponentCard(Object.keys(gamePlayers).find(key => object[key] === value));
+            }
+        }
+    });
+
     const discardPile = gameState?.cards.filter(card => {
         return card.location === "DISCARD"
-    })
+    }).sort((a, b) => a.order - b.order);
 
-    let topCard = discardPile[0]
-    for (const card of discardPile) {
-        if (topCard.order < card.order) {
-            topCard = card
-        }
-    }
-
-
-    discardPileCard(topCard);
+    discardPileCard(discardPile);
 
 
 
@@ -122,6 +145,7 @@ socket.on('game_event', (gameEvent) => {
             break;
         //Additional keys: user_id
         case "PLAYER_LEFT":
+            break;
         case "PLAYER_FORFEIT":
             break;
         case "DECK_SHUFFLED":
@@ -129,7 +153,7 @@ socket.on('game_event', (gameEvent) => {
             break;
         //Additional keys: user_id
         case "DEALT_CARD":
-            dealOpponentCard(user_id);
+            visualizeDealtCard(gameEvent?.user_id);
             break;
         case "GAME_DELETED":
             //?? what do we display here
@@ -142,7 +166,6 @@ socket.on('game_event', (gameEvent) => {
         case "GAME_ENDED":
             break;
         case "CARD_PLAYED":
-            discardPileCard(gameEvent);
             break;
         default:
             console.log("Unrecognized ")
@@ -210,8 +233,6 @@ function takeAndDeal() {
  */
 
 function dealCard(card) {
-    //TODO
-    //Get top card of database deck and assign specific card background
     let elem = document.getElementById("myHand");
     let newCard = document.createElement("div");
     newCard.classList.add("card", "myCard");
@@ -225,11 +246,11 @@ function dealCard(card) {
     elem.appendChild(newCard);
 }
 
-function dealOpponentCard(user_id) {
-    const key = Object.keys(gamePlayers).find(user_id => obj[user_id] === value);
-    const elem = getElementById(key);
+function dealOpponentCard(opponent) {
+    const elem = getElementById(opponent);
     let newCard = document.createElement("div");
-    newCard.classList.add("card", key + "card")
+    newCard.classList.add("card", opponent + "card")
+    elem.appendChild(newCard);
 }
 
 /**
@@ -279,12 +300,12 @@ function playCard(elem, color) {
     }
 
     fetch(query, request)
-      
+
 
 }
 
 function wildcard(card) {
-    const colors= ["RED", "YELLOW", "BLUE", "GREEN"];
+    const colors = ["RED", "YELLOW", "BLUE", "GREEN"];
 
     for (const color of colors) {
         console.log(color)
@@ -298,25 +319,6 @@ function wildcard(card) {
 }
 
 
-
-function POSTCard() {
-    var card = {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-            "message": input.value
-        })
-    }
-    fetch('/api/global-chat', message)
-
-    input.value = '';
-    input.focus();
-}
-
 /**
  *             | |
  *             | |
@@ -325,19 +327,25 @@ function POSTCard() {
  *              ∨
  */
 
-function discardPileCard(card) {
-    let elem = document.getElementsByClassName("card discardCard").item(0);
-    console.log(elem)
-    let randomDegree = Math.floor(Math.random() * 20) * (Math.round(Math.random()) ? 1 : -1);
-    console.log(randomDegree);
-    elem.style.backgroundImage = "url(" + CARD_FILE[card.color][card.value] + ")";
-    elem.animate([
-        { transform: 'rotate(calc(' + randomDegree + 'deg' + ')) scale(1.5)' },
-        { transform: 'rotate(calc(' + randomDegree + 'deg' + ')) scale(1)' }
+function discardPileCard(discardPile) {
+    let degreeTracker = 0;
+    for (const card of discardPile) {
+        let elem = document.getElementsByClassName("discard").item(0);
+        let newCard = document.createElement("div");
+        elem.appendChild(newCard);
+        newCard.classList.add("card", "discardCard");
+        newCard.style.backgroundImage = "url(" + CARD_FILE[card.color][card.value] + ")";
+        newCard.style.transform = 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + '))'
+        degreeTracker++;
+    }
+    let lastCard = document.getElementsByClassName("discard").item(0).lastChild;
+    lastCard.animate([
+        { transform: 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + ')) scale(1.5)' },
+        { transform: 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + ')) scale(1)' }
     ], {
         duration: 300,
         iterations: 1
     })
-    elem.style.transform = 'rotate(calc(' + randomDegree + 'deg' + '))'
+    lastCard.style.transform = 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + '))'
 }
 
