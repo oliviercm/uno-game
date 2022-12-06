@@ -367,4 +367,4 @@ function discardPileCard(card) {
     }
   );
   elem.style.transform = 'rotate(calc(' + randomDegree + 'deg' + '))';
-}
+} 

@@ -555,7 +555,7 @@ class Game {
       // Check win condition
       // If the player only had 1 card before playing the card (meaning the player has 0 cards after playing), the player wins.
       if (currentTurnPlayerCards.length <= 1) {
-        await endGameWithWinner(t, currentTurnPlayer.user_id);
+        await this.endGameWithWinner(t, currentTurnPlayer.user_id);
         gameEnded = true;
       } else {
         // Update play order
