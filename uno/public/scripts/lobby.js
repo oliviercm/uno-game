@@ -5,16 +5,17 @@ const creatGameButton = document.querySelector('.new-game-button')
 const gameList = document.querySelector('.box-game-list')
 const startGameButton = document.querySelector('.start-game')
 const refreshGameListButton = document.querySelector('.refresh-games-button')
+const logoutButton = document.querySelector('.logout-button')
 const socket = io({
     path: '/global-chat/',
 });
 
-startGameButton.addEventListener('click', startGame);
 messageButton.addEventListener('click', addMessage);
 creatGameButton.addEventListener('click', createGame);
 refreshGameListButton.addEventListener('click', refreshGameList);
+logoutButton.addEventListener('click', logout)
 
-let globalgame_id;
+
 
 socket.on('message', (data) => {
     message_container.innerHTML += createContainer(data.username, data.message);
@@ -27,6 +28,9 @@ window.onload = function populateGameList() {
             return response.json();
         })
         .then((data) => {
+            data.games = data.games.sort(function(a,b){
+                return b['game_id'] - a['game_id'];
+            })
             data.games.forEach((element) => {
                 gameList.innerHTML += createGameCard(element.game_id);
             });
@@ -49,6 +53,24 @@ function createContainer(username, message) {
 </div>
 
 `;
+}
+
+function logout() {
+    console.log("HERE")
+    fetch('/api/logout', {
+        method: 'POST',
+        credentials: 'include'
+    })
+    .then((response) =>{
+        if(response.status == 200){
+            window.location.href = "/"
+        }
+        else{
+            alert("ERROR_logout")
+        }
+    })
+    .catch((err) => console.log(err));
+
 }
 
 function addMessage() {
@@ -75,14 +97,18 @@ function addMessage() {
 function createGame() {
     fetch('/api/games', { method: 'POST' })
         .then((response) => {
-            return response.json();
-        })
-        .then((data) => {
-            globalgame_id = data.game_id;
+            if (response.status == 200) {
+                response.json()
+                    .then((data) => {
+                        window.location.href = `/game?game_id=${data.game_id}`
+                    })
+
+            }
+            else {
+                alert("Failed to Create Game");
+            }
         })
         .catch((err) => console.log(err));
-
-    startGameButton.style.visibility = 'visible';
 }
 
 function createGameCard(game_id) {
@@ -94,19 +120,7 @@ function createGameCard(game_id) {
         </div>`;
 }
 
-function startGame() {
-    window.location.href = `/game?game_id=${globalgame_id}`;
-    const query = `/api/games/${globalgame_id}/start`;
-    fetch(query, {
-        method: 'POST',
-        credentials: 'include',
-    }).then((response) => {
-        if (response.status == 200) {
-        } else {
-            alert('ERROR');
-        }
-    });
-}
+
 
 function joinGame(game_id) {
     const query = `/api/games/${game_id}/join`
@@ -132,6 +146,9 @@ function refreshGameList() {
             return response.json()
         })
         .then((data) => {
+            data.games = data.games.sort(function(a,b){
+                return b['game_id'] - a['game_id'];
+            })
             data.games.forEach(element => {
                 gameList.innerHTML += createGameCard(element.game_id)
             });

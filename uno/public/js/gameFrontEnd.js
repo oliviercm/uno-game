@@ -1,14 +1,15 @@
 import { CARD_FILE } from './resources.js';
-
 const searchParams = new URLSearchParams(window.location.search);
 const gameId = searchParams.get('game_id');
 const message_container = document.querySelector('.chat-field');
 const messageButton = document.querySelector('.input-button');
 const input = document.querySelector('.input-field-chat');
+const startGameButton = document.querySelector('.start-game');
+const leaveGameButton = document.querySelector('.leave-game');
 const wildcardButtonContainer = document.querySelector(
   '.wildcardButtonContainer'
 );
-
+const deckContainer = document.querySelector('.deckContainer')
 const socket = io({
   path: '/games/',
   query: {
@@ -62,6 +63,41 @@ function createContainer(username, message) {
   `;
 }
 
+startGameButton.addEventListener('click', startGame)
+
+function startGame() {
+  const query = `/api/games/${gameId}/start`;
+  fetch(query, {
+      method: 'POST',
+      credentials: 'include',
+  }).then((response) => {
+      if (response.status == 200) {
+        startGameButton.style.visibility = 'hidden'
+      } else {
+          alert('ERROR_start_game');
+      }
+  });
+}
+
+leaveGameButton.addEventListener('click', leaveGame);
+
+
+function leaveGame() {
+  const query = `/api/games/${gameId}/leave`;
+  fetch(query, {
+      method: 'POST',
+      credentials: 'include',
+  }).then((response) => {
+      if (response.status == 200) {
+        window.location.href = "/lobby"
+      } else {
+          alert('ERROR_leave_game');
+      }
+  });
+}
+
+
+
 //  GAME STATE
 const gamePlayers = {
   leftOpponent: '',
@@ -87,9 +123,23 @@ fetch('/api/users/current').then((response) => {
 });
 
 
+let host;
 socket.on("game_state", (gameState) => {
     console.log(gameState)
+    host = gameState?.users.filter(user => {
+      return user.is_host === true;
+    })
+
+    
+    if(currentUser.user_id === host[0].user_id){
+
+      if(gameState?.started === false){
+      startGameButton.style.visibility = 'visible'
+      }
+    }
+    
     //small issue with play order, if the player refreshes then the
+    if(gameState?.started === true){
     const currentOpponents = gameState?.users.filter(opponent => {
         return opponent.user_id !== currentUser.user_id;
     }).sort((a, b) => a.play_order - b.play_order);
@@ -114,7 +164,6 @@ socket.on("game_state", (gameState) => {
         return card.user_id === currentUser.user_id;
     }).sort((a, b) => a.order - b.order);
     for (const card of currentUserCards) {
-        // dealCard(CARD_FILE[card.color][card.value]); -- change by troy
         dealCard(card)
     }
 
@@ -129,6 +178,12 @@ socket.on("game_state", (gameState) => {
         }
     });
 
+    const deckStack = gameState?.cards.filter(card => {
+        return card.location === "DECK";
+    })
+    console.log(deckStack.length)
+    replenishDeck(deckStack.length)
+
     const discardPile = gameState?.cards.filter(card => {
         return card.location === "DISCARD"
     }).sort((a, b) => a.order - b.order);
@@ -136,8 +191,10 @@ socket.on("game_state", (gameState) => {
     discardPileCard(discardPile);
 
 
-
+  }
 });
+
+
 
 socket.on('game_event', (gameEvent) => {
     console.log(gameEvent)
@@ -151,7 +208,7 @@ socket.on('game_event', (gameEvent) => {
         case "PLAYER_FORFEIT":
             break;
         case "DECK_SHUFFLED":
-            replenishDeck();
+            //replenishDeck();
             break;
         //Additional keys: user_id
         case "DEALT_CARD":
@@ -195,28 +252,27 @@ function removePlayer(user_id) {
 }
 
 let lastDeckCard;
-replenishDeck();
+//replenishDeck();
 
 //TODO
 //get number of cards reshuffled (maybe from DECK_RESHUFFLED io event)
 function replenishDeck(deckSize) {
-  if (!deckSize) {
-    deckSize = 80;
-    //TODO
-    //based on 7 cards dealt to FOUR players
-    //get number of players? or localize a value
+  while (deckContainer.firstChild) {
+    deckContainer.removeChild(deckContainer.firstChild);
   }
+ 
 
   for (let i = 0; i < deckSize; i++) {
-    let elem = document.getElementsByClassName('deckContainer').item(0);
+    let elem = deckContainer;
     let newCard = document.createElement('div');
     newCard.classList.add('card', 'deckCard');
     elem.appendChild(newCard);
   }
-  lastDeckCard = document
-    .getElementsByClassName('deckContainer')
-    .item(0).lastChild;
-  lastDeckCard.addEventListener('click', takeAndDeal, false);
+
+  // lastDeckCard = document
+  //   .getElementsByClassName('deckContainer')
+  //   .item(0).lastChild;
+  // lastDeckCard.addEventListener('click', takeAndDeal, false);
 }
 
 function takeAndDeal() {

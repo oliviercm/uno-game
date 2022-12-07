@@ -13,6 +13,7 @@ script(src='/socket.io/socket.io.js')
     .deck
         a.reshuffleText Deck Empty
         button.reshuffle(type="button") Reshuffle
+        button.start-game START GAME
         .deckContainer
     .unoButtonContainer
         button.unoButton(type="button") Uno!
@@ -46,7 +47,7 @@ script(src='/socket.io/socket.io.js')
             br
         button.accordion CHAT
         script(src='/scripts/chatbox.js')
-
+    button.leave-game LEAVE GAME
     a.modal-open(href='#modal')
     #modal.modal
         .modal-content
@@ -57,7 +58,7 @@ script(src='/socket.io/socket.io.js')
                 button#bluebttn.choosebttn BLUE
                 button#yellowbttn.choosebttn YELLOW
                 button#greenbttn.choosebttn GREEN
-
+    
 
 
 
