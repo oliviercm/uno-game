@@ -344,8 +344,22 @@ class Game {
           gameUser.play_order,
         ]);
       }));
-      // Deal card from deck onto discard
-      // TODO: Redeal card if dealt card is draw 4
+      // Reshuffle deck until top card is not draw 4 - by UNO rules, the initial card cannot be a draw 4
+      while((await t.one(`
+        SELECT "value"
+          FROM game_cards
+          INNER JOIN cards USING(card_id)
+          WHERE
+            game_id = $1 AND
+            location = 'DECK' AND
+            "order" = (
+              SELECT MAX("order") FROM game_cards WHERE game_id = $1 AND location = 'DECK'
+            )`, [
+        this.id,
+      ])).value === "DRAW_FOUR") {
+        await this.shuffleDeck(t);
+      };
+      // Deal initial card onto discard from deck
       await t.none(`
         UPDATE game_cards
           SET
