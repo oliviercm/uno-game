@@ -487,9 +487,23 @@ class Game {
           this.id,
           userId,
         ]);
-        // Delete game if no players remain
+        // End game if no players remain, else migrate host if needed
         if ((await this.getGameUsers(t)).length <= 0) {
-          await this.deleteGame(t);
+          await this.endGame(t);
+        } else {
+          // Migrate host
+          if (userToRemove.is_host) {
+            await t.none(`UPDATE game_users SET is_host = FALSE WHERE game_id = $1 AND user_id = $2`, [
+              this.id,
+              userToRemove.user_id,
+            ]);
+            // Select random player from remaining players
+            const newHost = remainingPlayers[Math.floor(Math.random() * remainingPlayers.length)];
+            await t.none(`UPDATE game_users SET is_host = TRUE WHERE game_id = $1 AND user_id = $2`, [
+              this.id,
+              newHost.user_id,
+            ]);
+          }
         }
       }
     });
@@ -712,28 +726,20 @@ class Game {
     this.emitGameEvent({ type: "GAME_ENDED" });
   }
 
-  async deleteGame(transaction) {
-    const dg = async t => {
-      await t.none(`DELETE FROM game_cards WHERE game_id = $1`, [
-        this.id,
-      ]);
-      await t.none(`DELETE FROM game_users WHERE game_id = $1`, [
-        this.id,
-      ]);
-      await t.none(`DELETE FROM games WHERE game_id = $1`, [
+  async endGame(transaction) {
+    const endGameTransaction = async t => {
+      await t.none(`UPDATE games SET ended = TRUE WHERE game_id = $1`, [
         this.id,
       ]);
     };
     if (!transaction) {
       await db.tx(async t => {
-        await dg(t);
+        await endGameTransaction(t);
       });
     } else {
-      await dg(transaction);
+      await endGameTransaction(transaction);
     }
-    this.emitGameEvent({ type: "GAME_DELETED" });
-    this.disconnectSockets();
-    this.deleted = true;
+    this.emitGameEvent({ type: "GAME_ENDED" });
   }
 
   /**
@@ -780,7 +786,7 @@ class Game {
    * 
    * GAME_STARTED - Game has been started by the host.
    * 
-   * GAME_ENDED - Game has ended due to a player winning.
+   * GAME_ENDED - Game has ended due to a player winning or all players leaving.
    */
   emitGameEvent(event) {
     for (const socketId in this.connectedSockets) {
