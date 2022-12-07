@@ -507,8 +507,6 @@ class Game {
    * Plays a card, using a chosen color if played card is a wildcard
    */
   async playCard(requestingUserId, cardId, chosenWildcardColor) {
-    let gameEnded = false;
-    let playedCard;
     await db.tx(async t => {
       // Check that game is in progress
       if (!await this.isGameInProgress(t)) {
@@ -557,6 +555,8 @@ class Game {
         cardId,
       ]);
       // Card effects (draw 2, reverse, skip, draw four)
+      const gamePlayers = await this.getGameUsers(t);
+      const nextPlayer = gamePlayers.find(user => user.play_order === 1);
       let skipNextPlayer = false;
       let reversePlayOrder = false;
       let nextPlayerCardsToDraw = 0;
@@ -565,7 +565,7 @@ class Game {
           // The next player draws two cards.
           // If it is a 2 player game, the next player also has their turn skipped.
           nextPlayerCardsToDraw = 2;
-          if ((await this.getGameUsers(t)).length === 2) {
+          if (gamePlayers.length === 2) {
             skipNextPlayer = true;
           }
           break;
@@ -584,7 +584,7 @@ class Game {
         case "REVERSE": {
           // Reverse the turn order, unless:
           // If it is a 2 player game, the reverse card acts like a skip instead.
-          if ((await this.getGameUsers(t)).length === 2) {
+          if (gamePlayers.length === 2) {
             skipNextPlayer = true;
           } else {
             reversePlayOrder = true;
@@ -596,19 +596,18 @@ class Game {
         }
       }
       if (nextPlayerCardsToDraw) {
-        const nextPlayer = (await this.getGameUsers(t)).find(user => user.play_order === 1);
         for (let i = 0; i < nextPlayerCardsToDraw; i++) {
           await this.dealCard(nextPlayer.user_id, t);
         }
       }
       // Check win condition
       // If the player only had 1 card before playing the card (meaning the player has 0 cards after playing), the player wins.
+      let gameEnded = false;
       if (currentTurnPlayerCards.length <= 1) {
         await this.endGameWithWinner(t, currentTurnPlayer.user_id);
         gameEnded = true;
       } else {
         // Update play order
-        const gamePlayers = await this.getGameUsers(t);
         await Promise.all(gamePlayers.map(gamePlayer => {
           // Calculate new play order, taking into account whether the turn order has been reversed or whether a player has been skipped.
           let newOrder = ((reversePlayOrder ? gamePlayers.length - gamePlayer.play_order : gamePlayer.play_order) % gamePlayers.length) - (skipNextPlayer ? 2 : 1);
@@ -625,13 +624,29 @@ class Game {
         await this.ensureCurrentPlayerCanPlayCard(t);
       }
 
-      playedCard = cardToPlay;
+      // Return results of turn for game event emitting
+      return {
+        turnUserId: requestingUserId,
+        playedCard: cardToPlay,
+        gameEnded: gameEnded,
+        nextPlayerSkipped: skipNextPlayer,
+        nextPlayer: nextPlayer,
+        playOrderReversed: reversePlayOrder,
+      };
+    }).then(turnResults => {
+      // Emit game events based on the result of the turn
+      this.emitGameEvent({ type: "CARD_PLAYED", user_id: turnResults.turnUserId, card_color: turnResults.playedCard.color, card_value: turnResults.playedCard.value });
+      if (turnResults.nextPlayerSkipped) {
+        this.emitGameEvent({ type: "SKIPPED_TURN", user_id: turnResults.nextPlayer.user_id });
+      }
+      if (turnResults.playOrderReversed) {
+        this.emitGameEvent({ type: "REVERSED_TURNS" });
+      }
+      if (turnResults.gameEnded) {
+        this.emitGameEvent({ type: "GAME_ENDED" });
+      }
+      this.emitGameStateToConnectedUsers();
     });
-    this.emitGameEvent({ type: "CARD_PLAYED", user_id: requestingUserId, card_color: playedCard.color, card_value: playedCard.value });
-    if (gameEnded) {
-      this.emitGameEvent({ type: "GAME_ENDED" });
-    }
-    this.emitGameStateToConnectedUsers();
   }
 
   /**
@@ -755,6 +770,11 @@ class Game {
    * 
    * CARD_PLAYED - A card was played by a player.
    *    Additional keys: user_id, card_color, card_value
+   * 
+   * SKIPPED_TURN - A player's turn was skipped.
+   *    Additional keys: user_id
+   * 
+   * REVERSED_TURNS - The turn order was reversed.
    * 
    * GAME_DELETED - All players left before game started.
    * 
