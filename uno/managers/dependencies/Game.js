@@ -206,10 +206,10 @@ class Game {
   }
 
   async getChosenWildcardColor(transaction) {
-    await (transaction ?? db).one(`
+    return (await (transaction ?? db).one(`
       SELECT chosen_wildcard_color FROM games WHERE game_id = $1`, [
       this.id,
-    ]);
+    ])).chosen_wildcard_color;
   }
 
   async isGameInProgress(transaction) {
