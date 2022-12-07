@@ -197,7 +197,8 @@ socket.on('game_event', (gameEvent) => {
       //TODO: play an animation of the deck shuffling
       break;
     case "DEALT_CARD":
-      visualizeDealtCard(gameEvent?.user_id);
+      //TODO: play an animation of a card being dealt
+      //visualizeDealtCard(gameEvent?.user_id);
       break;
     case "GAME_DELETED":
       // TODO: display message "the host has ended the game", redirect to lobby
