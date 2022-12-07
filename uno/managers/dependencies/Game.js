@@ -121,7 +121,7 @@ class Game {
 
   async getGameUsers(transaction) {
     const gameUsers = await (transaction ?? db).manyOrNone(`
-      SELECT user_id, username, play_order, state, is_host
+      SELECT user_id, username, play_order, seat_order, state, is_host
         FROM game_users
         INNER JOIN users USING(user_id)
         WHERE game_id = $1`, [
@@ -338,7 +338,7 @@ class Game {
         gameUsers[i].play_order = (randomOrder + i) % gameUsers.length;
       }
       await Promise.all(gameUsers.map(gameUser => {
-        return t.none(`UPDATE game_users SET play_order = $3 WHERE game_id = $1 AND user_id = $2`, [
+        return t.none(`UPDATE game_users SET play_order = $3, seat_order = $3 WHERE game_id = $1 AND user_id = $2`, [
           this.id,
           gameUser.user_id,
           gameUser.play_order,
