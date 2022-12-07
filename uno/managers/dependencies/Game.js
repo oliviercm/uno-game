@@ -63,7 +63,11 @@ class Game {
    * Returns a game state where cards that the given user should not be able to see (other player's cards, the deck, etc.) are hidden.
    */
   sanitizeGameStateForUser(gameState, userId) {
-    // TODO: Don't sanitize cards if game has ended
+    // If game has ended, reveal all cards to the user
+    if (gameState.ended) {
+      return gameState;
+    }
+    // If game hasn't ended, some cards should be hidden from the user
     const {
       cards,
       ...restOfGameState
