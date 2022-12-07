@@ -28,6 +28,9 @@ window.onload = function populateGameList() {
             return response.json();
         })
         .then((data) => {
+            data.games = data.games.sort(function(a,b){
+                return b['game_id'] - a['game_id'];
+            })
             data.games.forEach((element) => {
                 gameList.innerHTML += createGameCard(element.game_id);
             });
@@ -51,10 +54,20 @@ function createContainer(username, message) {
 
 `;
 }
-///api/login/logout
+
 function logout() {
+    console.log("HERE")
     fetch('/api/logout', {
-        method: 'POST'
+        method: 'POST',
+        credentials: 'include'
+    })
+    .then((response) =>{
+        if(response.status == 200){
+            window.location.href = "/"
+        }
+        else{
+            alert("ERROR_logout")
+        }
     })
     .catch((err) => console.log(err));
 
@@ -133,6 +146,9 @@ function refreshGameList() {
             return response.json()
         })
         .then((data) => {
+            data.games = data.games.sort(function(a,b){
+                return b['game_id'] - a['game_id'];
+            })
             data.games.forEach(element => {
                 gameList.innerHTML += createGameCard(element.game_id)
             });

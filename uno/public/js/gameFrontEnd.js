@@ -9,7 +9,7 @@ const leaveGameButton = document.querySelector('.leave-game');
 const wildcardButtonContainer = document.querySelector(
   '.wildcardButtonContainer'
 );
-
+const deckContainer = document.querySelector('.deckContainer')
 const socket = io({
   path: '/games/',
   query: {
@@ -181,6 +181,7 @@ socket.on("game_state", (gameState) => {
     const deckStack = gameState?.cards.filter(card => {
         return card.location === "DECK";
     })
+    console.log(deckStack.length)
     replenishDeck(deckStack.length)
 
     const discardPile = gameState?.cards.filter(card => {
@@ -207,7 +208,7 @@ socket.on('game_event', (gameEvent) => {
         case "PLAYER_FORFEIT":
             break;
         case "DECK_SHUFFLED":
-            replenishDeck();
+            //replenishDeck();
             break;
         //Additional keys: user_id
         case "DEALT_CARD":
@@ -256,28 +257,22 @@ let lastDeckCard;
 //TODO
 //get number of cards reshuffled (maybe from DECK_RESHUFFLED io event)
 function replenishDeck(deckSize) {
-  const deckContainer = document.getElementsByClassName('deckContainer')
   while (deckContainer.firstChild) {
     deckContainer.removeChild(deckContainer.firstChild);
   }
-  console.log(deckSize)
-  if (!deckSize) {
-    deckSize = 80;
-    //TODO
-    //based on 7 cards dealt to FOUR players
-    //get number of players? or localize a value
-  }
+ 
 
   for (let i = 0; i < deckSize; i++) {
-    let elem = deckContainer.item(0);
+    let elem = deckContainer;
     let newCard = document.createElement('div');
     newCard.classList.add('card', 'deckCard');
     elem.appendChild(newCard);
   }
-  lastDeckCard = document
-    .getElementsByClassName('deckContainer')
-    .item(0).lastChild;
-  lastDeckCard.addEventListener('click', takeAndDeal, false);
+
+  // lastDeckCard = document
+  //   .getElementsByClassName('deckContainer')
+  //   .item(0).lastChild;
+  // lastDeckCard.addEventListener('click', takeAndDeal, false);
 }
 
 function takeAndDeal() {

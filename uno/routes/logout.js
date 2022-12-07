@@ -12,7 +12,7 @@ router.post("/", (req, res, next) => {
       if (err) {
         return next(err);
       }
-      res.redirect("/");
+      return res.status(200).send();
     });
   } catch(e) {
     next(e);
