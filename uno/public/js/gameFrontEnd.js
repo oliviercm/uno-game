@@ -91,7 +91,7 @@ function leaveGame() {
 }
 leaveGameButton.addEventListener('click', leaveGame);
 
-//  GAME STATE
+// GAME STATE
 
 let discardPileDegree = [];
 for (let i = 0; i < 108; i++) {
@@ -114,7 +114,8 @@ socket.on("game_state", (gameState) => {
   console.log(gameState);
 
   // Determine if the current user is a spectator or a player
-  const userIsSpectator = !gameState.users.some(user => user.user_id === currentUser.user_id);
+  const currentUserInGameState = gameState.users.find(user => user.user_id === currentUser.user_id);
+  const userIsSpectator = !currentUserInGameState;
 
   if (!userIsSpectator) {
     // Change user seat order such that the current user has seat order of 0, and other users follow consecutively 1, 2, 3...
@@ -149,6 +150,11 @@ socket.on("game_state", (gameState) => {
   for (const card of currentUserCards) {
     displayOwnCard(card);
   }
+  document.querySelector(':root').style.setProperty('--numCards', currentUserCards.length);
+  // Display turn border for self
+  if (currentUserInGameState && currentUserInGameState.turn_order === 0) {
+    displayTurnBorder("myHand");
+  }
 
   // Display opponent cards and name
   const opponents = gameState.users
@@ -166,6 +172,10 @@ socket.on("game_state", (gameState) => {
     const numOpponentCards = cardsInHands.filter(card => card.user_id === opponents[i].user_id).length;
     displayOpponentCards(orderToDisplayOpponents[i], numOpponentCards);
     displayOpponentUsername(orderToDisplayOpponents[i], opponents[i].username);
+    // Display turn border for opponents
+    if (opponents[i].turn_order === 0) {
+      displayTurnBorder(orderToDisplayOpponents[i]);
+    }
   }
 
   // Display deck
@@ -174,11 +184,13 @@ socket.on("game_state", (gameState) => {
   });
   displayDeck(deckStack.length);
 
-  // Display discard pile
-  const discardPile = gameState?.cards.filter(card => {
-    return card.location === "DISCARD"
-  }).sort((a, b) => a.order - b.order);
-  displayDiscardPile(discardPile);
+  // Display discard pile if game is started
+  if (gameState.started) {
+    const discardPile = gameState?.cards.filter(card => {
+      return card.location === "DISCARD"
+    }).sort((a, b) => a.order - b.order);
+    displayDiscardPile(discardPile);
+  }
 });
 
 socket.on('game_event', (gameEvent) => {
@@ -198,7 +210,6 @@ socket.on('game_event', (gameEvent) => {
       break;
     case "DEALT_CARD":
       //TODO: play an animation of a card being dealt
-      //visualizeDealtCard(gameEvent?.user_id);
       break;
     case "GAME_DELETED":
       // TODO: display message "the host has ended the game", redirect to lobby
@@ -265,6 +276,7 @@ function displayOwnCard(card) {
  */
 function displayOpponentCards(opponentKey, amount) {
   const opponentHandElement = document.getElementById(opponentKey);
+  opponentHandElement.style.visibility = "visible";
   const cardsAlreadyInOpponentsHand = opponentHandElement.childElementCount;
   // Based on how many cards are already displayed and how many should be displayed, add or remove cards as necessary
   if (cardsAlreadyInOpponentsHand < amount) {
@@ -278,6 +290,7 @@ function displayOpponentCards(opponentKey, amount) {
       opponentHandElement.removeChild(opponentHandElement.firstChild);
     }
   }
+  document.querySelector(':root').style.setProperty(`--${opponentKey}Cards`, amount);
 }
 
 /**
@@ -286,6 +299,7 @@ function displayOpponentCards(opponentKey, amount) {
  */
 function displayOpponentUsername(opponentKey, username) {
   const opponentNameElement = document.getElementById(`${opponentKey}Name`);
+  opponentNameElement.style.visibility = "visible";
   opponentNameElement.textContent = username;
 }
 
@@ -358,23 +372,34 @@ function wildcard(card) {
 }
 
 function displayDiscardPile(discardPile) {
-    let degreeTracker = 0;
-    for (const card of discardPile) {
-        let elem = document.getElementsByClassName("discard").item(0);
-        let newCard = document.createElement("div");
-        elem.appendChild(newCard);
-        newCard.classList.add("card", "discardCard");
-        newCard.style.backgroundImage = "url(" + CARD_FILE[card.color][card.value] + ")";
-        newCard.style.transform = 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + '))'
-        degreeTracker++;
-    }
-    let lastCard = document.getElementsByClassName("discard").item(0).lastChild;
-    lastCard.animate([
-        { transform: 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + ')) scale(1.5)' },
-        { transform: 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + ')) scale(1)' }
-    ], {
-        duration: 300,
-        iterations: 1
-    })
-    lastCard.style.transform = 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + '))'
+  let degreeTracker = 0;
+  const discardPileElement = document.getElementsByClassName("discard").item(0);
+  for (const card of discardPile) {
+    const newCard = document.createElement("div");
+    newCard.classList.add("card", "discardCard");
+    newCard.style.backgroundImage = "url(" + CARD_FILE[card.color][card.value] + ")";
+    newCard.style.transform = 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + '))';
+    discardPileElement.appendChild(newCard);
+    degreeTracker++;
+  }
+  const lastCard = discardPileElement.lastChild;
+  lastCard.animate([
+    { transform: 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + ')) scale(1.5)' },
+    { transform: 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + ')) scale(1)' }
+  ], {
+    duration: 300,
+    iterations: 1
+  })
+  lastCard.style.transform = 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + '))'
+}
+
+function displayTurnBorder(turnHandKey) {
+  const handElementKeys = ["myHand", "rightOpponent", "topOpponent", "leftOpponent"];
+  const root = document.querySelector(':root');
+  for (const handElementKey of handElementKeys) {
+    document.getElementById(handElementKey).style.border = ".2rem solid yellow";
+    root.style.setProperty(`--${handElementKey}Border`, "hidden");
+  }
+  document.getElementById(turnHandKey).style.border = "0rem";
+  root.style.setProperty(`--${turnHandKey}Border`, "visible");
 }

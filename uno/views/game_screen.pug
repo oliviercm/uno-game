@@ -7,7 +7,7 @@ head
     title Home
 script(src='/socket.io/socket.io.js')
 .gameScreenContainer
-    .discard
+    #discard.discard
         a Discard Pile
         .card.discardCard
     .deck
@@ -19,13 +19,17 @@ script(src='/socket.io/socket.io.js')
         button.unoButton(type="button") Uno!
     .youDidNotSayUnoButtonContainer
         button.youDidNotSayUnoButton(type="button") You didn't say Uno!
+    #myHandBorder.hand
     #myHand.hand
-    #leftOpponentName.opponentName
-    #leftOpponent.hand
-    #topOpponentName.opponentName
-    #topOpponent.hand
-    #rightOpponentName.opponentName
-    #rightOpponent.hand
+    .leftOpponentContainer
+        #leftOpponentName.opponentName
+        #leftOpponent.hand
+    .topOpponentContainer
+        #topOpponentName.opponentName
+        #topOpponent.hand
+    .rightOpponentContainer
+        #rightOpponentName.opponentName
+        #rightOpponent.hand
     .wildcardButtonContainer
     .container-chat
         .accordion-content
