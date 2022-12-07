@@ -58,9 +58,7 @@ function createContainer(username, message) {
   <like></like>
   <p class="mb-0 text-white">${message}</p>
   </div>
-  </div>
-  
-  `;
+  </div>`;
 }
 
 startGameButton.addEventListener('click', startGame)
@@ -102,7 +100,7 @@ function leaveGame() {
 
 let discardPileDegree = [];
 for (let i = 0; i < 108; i++) {
-    discardPileDegree.push(Math.floor(Math.random() * 20) * (Math.round(Math.random()) ? 1 : -1));
+  discardPileDegree.push(Math.floor(Math.random() * 20) * (Math.round(Math.random()) ? 1 : -1));
 }
 
 let currentUser;
@@ -116,7 +114,6 @@ fetch('/api/users/current').then((response) => {
     alert('Not logged in');
   }
 });
-
 
 socket.on("game_state", (gameState) => {
   console.log(gameState);
@@ -184,7 +181,7 @@ socket.on("game_state", (gameState) => {
 
   // Display discard pile
   const discardPile = gameState?.cards.filter(card => {
-      return card.location === "DISCARD"
+    return card.location === "DISCARD"
   }).sort((a, b) => a.order - b.order);
   discardPileCard(discardPile);
 });
@@ -192,38 +189,38 @@ socket.on("game_state", (gameState) => {
 
 
 socket.on('game_event', (gameEvent) => {
-    console.log(gameEvent)
-    switch (gameEvent.type) {
-        //Additional keys: user_id
-        case "PLAYER_JOINED":
-            break;
-        //Additional keys: user_id
-        case "PLAYER_LEFT":
-            break;
-        case "PLAYER_FORFEIT":
-            break;
-        case "DECK_SHUFFLED":
-            //replenishDeck();
-            break;
-        //Additional keys: user_id
-        case "DEALT_CARD":
-            visualizeDealtCard(gameEvent?.user_id);
-            break;
-        case "GAME_DELETED":
-            //?? what do we display here
-            // TODO: display message "the host has ended the game", redirect to lobby
-            break;
-        case "GAME_STARTED":
-            //TODO
-            //make 
-            break;
-        case "GAME_ENDED":
-            break;
-        case "CARD_PLAYED":
-            break;
-        default:
-            console.log("Unrecognized ")
-    }
+  console.log(gameEvent)
+  switch (gameEvent.type) {
+    //Additional keys: user_id
+    case "PLAYER_JOINED":
+      break;
+    //Additional keys: user_id
+    case "PLAYER_LEFT":
+      break;
+    case "PLAYER_FORFEIT":
+      break;
+    case "DECK_SHUFFLED":
+      //replenishDeck();
+      break;
+    //Additional keys: user_id
+    case "DEALT_CARD":
+      visualizeDealtCard(gameEvent?.user_id);
+      break;
+    case "GAME_DELETED":
+      //?? what do we display here
+      // TODO: display message "the host has ended the game", redirect to lobby
+      break;
+    case "GAME_STARTED":
+      //TODO
+      //make 
+      break;
+    case "GAME_ENDED":
+      break;
+    case "CARD_PLAYED":
+      break;
+    default:
+      console.log("Unrecognized ")
+  }
 })
 
 //TODO
@@ -246,7 +243,6 @@ function removePlayer(user_id) {
   }
 }
 
-let lastDeckCard;
 function replenishDeck(deckSize) {
   while (deckContainer.firstChild) {
     deckContainer.removeChild(deckContainer.firstChild);
@@ -258,20 +254,6 @@ function replenishDeck(deckSize) {
     newCard.classList.add('card', 'deckCard');
     elem.appendChild(newCard);
   }
-
-  // lastDeckCard = document
-  //   .getElementsByClassName('deckContainer')
-  //   .item(0).lastChild;
-  // lastDeckCard.addEventListener('click', takeAndDeal, false);
-}
-
-function takeAndDeal() {
-  lastDeckCard.remove();
-  lastDeckCard = document
-    .getElementsByClassName('deckContainer')
-    .item(0).lastChild;
-  dealCard();
-  lastDeckCard.addEventListener('click', takeAndDeal, false);
 }
 
 function dealCard(card) {
