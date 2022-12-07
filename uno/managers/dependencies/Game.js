@@ -556,8 +556,51 @@ class Game {
         this.id,
         cardId,
       ]);
-      // TODO: Card effects (draw 2, reverse, skip, draw four)
-
+      // Card effects (draw 2, reverse, skip, draw four)
+      let skipNextPlayer = false;
+      let reversePlayOrder = false;
+      let nextPlayerCardsToDraw = 0;
+      switch (cardToPlay.value) {
+        case "DRAW_TWO": {
+          // The next player draws two cards.
+          // If it is a 2 player game, the next player also has their turn skipped.
+          nextPlayerCardsToDraw = 2;
+          if ((await this.getGameUsers(t)).length === 2) {
+            skipNextPlayer = true;
+          }
+          break;
+        }
+        case "DRAW_FOUR": {
+          // The next player draws four cards and their turn is skipped.
+          nextPlayerCardsToDraw = 4;
+          skipNextPlayer = true;
+          break;
+        }
+        case "SKIP": {
+          // The next player's turn is skipped.
+          skipNextPlayer = true;
+          break;
+        }
+        case "REVERSE": {
+          // Reverse the turn order, unless:
+          // If it is a 2 player game, the reverse card acts like a skip instead.
+          if ((await this.getGameUsers(t)).length === 2) {
+            skipNextPlayer = true;
+          } else {
+            reversePlayOrder = true;
+          }
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+      if (nextPlayerCardsToDraw) {
+        const nextPlayer = (await this.getGameUsers(t)).find(user => user.play_order === 1);
+        for (let i = 0; i < nextPlayerCardsToDraw; i++) {
+          await this.dealCard(nextPlayer.user_id, t);
+        }
+      }
       // Check win condition
       // If the player only had 1 card before playing the card (meaning the player has 0 cards after playing), the player wins.
       if (currentTurnPlayerCards.length <= 1) {
@@ -567,9 +610,10 @@ class Game {
         // Update play order
         const gamePlayers = await this.getGameUsers(t);
         await Promise.all(gamePlayers.map(gamePlayer => {
-          let newOrder = gamePlayer.play_order - 1;
+          // Calculate new play order, taking into account whether the turn order has been reversed or whether a player has been skipped.
+          let newOrder = ((reversePlayOrder ? gamePlayers.length - gamePlayer.play_order : gamePlayer.play_order) % gamePlayers.length) - (skipNextPlayer ? 2 : 1);
           if (newOrder < 0) {
-            newOrder = gamePlayers.length - 1;
+            newOrder = gamePlayers.length + newOrder;
           }
           return t.none(`UPDATE game_users SET play_order = $3 WHERE game_id = $1 AND user_id = $2`, [
             this.id,
