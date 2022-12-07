@@ -53,15 +53,10 @@ function createContainer(username, message) {
 }
 ///api/login/logout
 function logout() {
-    fetch('/api/login/logout', {
+    fetch('/api/logout', {
         method: 'POST'
     })
-        .then((response) => {
-            if (response.status == 200) {
-                document.location.href = '/login'
-            }
-        })
-        .catch((err) => console.log(err));
+    .catch((err) => console.log(err));
 
 }
 
