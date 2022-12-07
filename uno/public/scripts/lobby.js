@@ -5,16 +5,17 @@ const creatGameButton = document.querySelector('.new-game-button')
 const gameList = document.querySelector('.box-game-list')
 const startGameButton = document.querySelector('.start-game')
 const refreshGameListButton = document.querySelector('.refresh-games-button')
+const logoutButton = document.querySelector('.logout-button')
 const socket = io({
     path: '/global-chat/',
 });
 
-startGameButton.addEventListener('click', startGame);
 messageButton.addEventListener('click', addMessage);
 creatGameButton.addEventListener('click', createGame);
 refreshGameListButton.addEventListener('click', refreshGameList);
+logoutButton.addEventListener('click', logout)
 
-let globalgame_id;
+
 
 socket.on('message', (data) => {
     message_container.innerHTML += createContainer(data.username, data.message);
@@ -50,6 +51,19 @@ function createContainer(username, message) {
 
 `;
 }
+///api/login/logout
+function logout() {
+    fetch('/api/login/logout', {
+        method: 'POST'
+    })
+        .then((response) => {
+            if (response.status == 200) {
+                document.location.href = '/login'
+            }
+        })
+        .catch((err) => console.log(err));
+
+}
 
 function addMessage() {
     if (input.value === '') {
@@ -75,14 +89,18 @@ function addMessage() {
 function createGame() {
     fetch('/api/games', { method: 'POST' })
         .then((response) => {
-            return response.json();
-        })
-        .then((data) => {
-            globalgame_id = data.game_id;
+            if (response.status == 200) {
+                response.json()
+                    .then((data) => {
+                        window.location.href = `/game?game_id=${data.game_id}`
+                    })
+
+            }
+            else {
+                alert("Failed to Create Game");
+            }
         })
         .catch((err) => console.log(err));
-
-    startGameButton.style.visibility = 'visible';
 }
 
 function createGameCard(game_id) {
@@ -94,19 +112,7 @@ function createGameCard(game_id) {
         </div>`;
 }
 
-function startGame() {
-    window.location.href = `/game?game_id=${globalgame_id}`;
-    const query = `/api/games/${globalgame_id}/start`;
-    fetch(query, {
-        method: 'POST',
-        credentials: 'include',
-    }).then((response) => {
-        if (response.status == 200) {
-        } else {
-            alert('ERROR');
-        }
-    });
-}
+
 
 function joinGame(game_id) {
     const query = `/api/games/${game_id}/join`

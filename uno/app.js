@@ -30,6 +30,7 @@ app.use("/api/games", require("./routes/games"), require("./middleware/ApiErrorH
 app.use("/api/login", require("./routes/login"), require("./middleware/ApiErrorHandler"));
 app.use("/api/global-chat", require("./routes/global-chat"), require("./middleware/ApiErrorHandler"));
 
+
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));
