@@ -99,11 +99,6 @@ function leaveGame() {
 
 
 //  GAME STATE
-const gamePlayers = {
-  leftOpponent: '',
-  topOpponent: '',
-  rightOpponent: '',
-};
 
 let discardPileDegree = [];
 for (let i = 0; i < 108; i++) {
@@ -123,75 +118,75 @@ fetch('/api/users/current').then((response) => {
 });
 
 
-let host;
 socket.on("game_state", (gameState) => {
-    console.log(gameState)
-    host = gameState?.users.filter(user => {
-      return user.is_host === true;
-    })
+  console.log(gameState);
 
-    
-    if(currentUser.user_id === host[0].user_id){
+  // Determine if the current user is a spectator or a player
+  const userIsSpectator = !gameState.users.some(user => user.user_id === currentUser.user_id);
 
-      if(gameState?.started === false){
-      startGameButton.style.visibility = 'visible'
+  if (!userIsSpectator) {
+    // Change user seat order such that the current user has seat order of 0, and other users follow consecutively 1, 2, 3...
+    gameState.users = gameState.users.map(user => {
+      let normalizedSeatOrder = user.seat_order - (gameState.users.find(user => user.user_id === currentUser.user_id)).seat_order;
+      if (normalizedSeatOrder < 0) {
+        normalizedSeatOrder = gameState.users.length + normalizedSeatOrder;
       }
-    }
-    
-    //small issue with play order, if the player refreshes then the
-    if(gameState?.started === true){
-    const currentOpponents = gameState?.users.filter(opponent => {
-        return opponent.user_id !== currentUser.user_id;
-    }).sort((a, b) => a.play_order - b.play_order);
-
-    for (let opponent of currentOpponents) {
-        if (!gamePlayers[opponent]) {
-            Object.keys(gamePlayers).forEach(key => {
-                if (gamePlayers[key] === "") {
-                    gamePlayers[key] = opponent;
-                }
-            });
-        }
-    }
-
-
-    const deleteAssets = document.getElementById("myHand")
-
-    while (deleteAssets.firstChild) {
-        deleteAssets.removeChild(deleteAssets.firstChild);
-    }
-    const currentUserCards = gameState?.cards.filter(card => {
-        return card.user_id === currentUser.user_id;
-    }).sort((a, b) => a.order - b.order);
-    for (const card of currentUserCards) {
-        dealCard(card)
-    }
-
-    Object.keys(gamePlayers).forEach(key => {
-        if (gamePlayers[key] !== "") {
-            const currentOpponentCards = gameState?.cards.filter(card => {
-                return card.user_id === gamePlayers[key];
-            })
-            for (const card of currentOpponentCards) {
-                dealOpponentCard(Object.keys(gamePlayers).find(key => object[key] === value));
-            }
-        }
+      return {
+        ...user,
+        seat_order: normalizedSeatOrder,
+      };
     });
-
-    const deckStack = gameState?.cards.filter(card => {
-        return card.location === "DECK";
-    })
-    console.log(deckStack.length)
-    replenishDeck(deckStack.length)
-
-    const discardPile = gameState?.cards.filter(card => {
-        return card.location === "DISCARD"
-    }).sort((a, b) => a.order - b.order);
-
-    discardPileCard(discardPile);
-
-
   }
+
+  // Display the "Start Game" button if the current user is the host and the game hasn't started yet
+  const host = gameState?.users.find(user => user.is_host);
+  if (currentUser.user_id === host.user_id) {
+    if (gameState?.started === false) {
+      startGameButton.style.visibility = 'visible';
+    }
+  }
+
+  // Display the current user's cards
+  const handElement = document.getElementById("myHand");
+  while (handElement.firstChild) {
+    handElement.removeChild(handElement.firstChild);
+  }
+  const currentUserCards = gameState?.cards.filter(card => {
+    return card.user_id === currentUser.user_id;
+  }).sort((a, b) => a.order - b.order);
+  for (const card of currentUserCards) {
+    dealCard(card);
+  }
+
+  // Display opponent cards and name
+  const opponents = gameState.users
+    .filter(user => user.user_id !== currentUser.user_id)
+    .sort((opponent1, opponent2) => opponent2.seat_order - opponent1.seat_order);
+  const cardsInHands = gameState.cards.filter(card => card.location === "HAND");
+  // If there is only one opponent, display them on top. Otherwise, display opponents counter-clockwise
+  let orderToDisplayOpponents;
+  if (opponents.length === 1) {
+    orderToDisplayOpponents = ["topOpponent"];
+  } else {
+    orderToDisplayOpponents = ["rightOpponent", "topOpponent", "leftOpponent"];
+  }
+  for (let i = 0; i < opponents.length; i++) {
+    const numOpponentCards = cardsInHands.filter(card => card.user_id === opponents[i].user_id).length;
+    displayOpponentCards(orderToDisplayOpponents[i], numOpponentCards);
+    displayOpponentUsername(orderToDisplayOpponents[i], opponents[i].username);
+  }
+
+  // Display deck
+  const deckStack = gameState?.cards.filter(card => {
+      return card.location === "DECK";
+  });
+  replenishDeck(deckStack.length);
+
+  // Display discard pile
+  const discardPile = gameState?.cards.filter(card => {
+      return card.location === "DISCARD"
+  }).sort((a, b) => a.order - b.order);
+  discardPileCard(discardPile);
 });
 
 
@@ -252,15 +247,10 @@ function removePlayer(user_id) {
 }
 
 let lastDeckCard;
-//replenishDeck();
-
-//TODO
-//get number of cards reshuffled (maybe from DECK_RESHUFFLED io event)
 function replenishDeck(deckSize) {
   while (deckContainer.firstChild) {
     deckContainer.removeChild(deckContainer.firstChild);
   }
- 
 
   for (let i = 0; i < deckSize; i++) {
     let elem = deckContainer;
@@ -284,16 +274,7 @@ function takeAndDeal() {
   lastDeckCard.addEventListener('click', takeAndDeal, false);
 }
 
-/**
- *             | |
- *             | |
- *             | |
- *            \   /
- *              ∨
- */
-
 function dealCard(card) {
-
   let elem = document.getElementById('myHand');
   let newCard = document.createElement('div');
   newCard.classList.add('card', 'myCard');
@@ -321,22 +302,35 @@ function dealCard(card) {
   elem.appendChild(newCard);
 }
 
-function dealOpponentCard(user_id) {
-  const key = Object.keys(gamePlayers).find(
-    (user_id) => obj[user_id] === value
-  );
-  const elem = getElementById(key);
-  let newCard = document.createElement('div');
-  newCard.classList.add('card', key + 'card');
+/**
+ * @param {String} opponentKey "topOpponent", "rightOpponent", "leftOpponent"
+ * @param {Number} amount Amount of cards to display in hand
+ */
+function displayOpponentCards(opponentKey, amount) {
+  const opponentHandElement = document.getElementById(opponentKey);
+  const cardsAlreadyInOpponentsHand = opponentHandElement.childElementCount;
+  // Based on how many cards are already displayed and how many should be displayed, add or remove cards as necessary
+  if (cardsAlreadyInOpponentsHand < amount) {
+    for (let i = 0; i < amount - cardsAlreadyInOpponentsHand; i++) {
+      const newCard = document.createElement('div');
+      newCard.classList.add('card', `${opponentKey}Card`);
+      opponentHandElement.appendChild(newCard);
+    }
+  } else if (cardsAlreadyInOpponentsHand > amount) {
+    for (let i = 0; i < cardsAlreadyInOpponentsHand - amount; i++) {
+      opponentHandElement.removeChild(opponentHandElement.firstChild);
+    }
+  }
 }
 
 /**
- *             | |
- *             | |
- *             | |
- *            \   /
- *              ∨
+ * @param {String} opponentKey "topOpponent", "rightOpponent", "leftOpponent"
+ * @param {String} username Username to display
  */
+function displayOpponentUsername(opponentKey, username) {
+  const opponentNameElement = document.getElementById(`${opponentKey}Name`);
+  opponentNameElement.textContent = username;
+}
 
 //TODO
 //add timeout to play another card
@@ -405,14 +399,6 @@ function wildcard(card) {
     window.location.href = '#';
   });
 }
-
-/**
- *             | |
- *             | |
- *             | |
- *            \   /
- *              ∨
- */
 
 function discardPileCard(discardPile) {
     let degreeTracker = 0;

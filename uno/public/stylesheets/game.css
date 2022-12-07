@@ -377,22 +377,22 @@ body {
     position: absolute;
 }
 
-#opNameLeft,
-#opNameRight {
+#leftOpponentName,
+#rightOpponentName {
     height: 50vh;
     top: 50vh;
     margin-top: -30vh;
 }
 
-#opNameLeft {
+#leftOpponentName {
     right: 0px;
 }
 
-#opNameRight{
+#rightOpponentName{
     left: 0px;
 }
 
-#opNameTop {
+#topOpponentName {
     top: 0px;
     left: 50%;
     margin-left: -20%;
@@ -738,4 +738,3 @@ button.accordion:hover, button.accordion.is-open {
     background-color: #126b0f;
     transform: translate(2px,2px);   
 }
-
