@@ -374,6 +374,9 @@ function wildcard(card) {
 function displayDiscardPile(discardPile) {
   let degreeTracker = 0;
   const discardPileElement = document.getElementsByClassName("discard").item(0);
+  while (discardPileElement.firstChild) {
+    discardPileElement.removeChild(discardPileElement.firstChild);
+  }
   for (const card of discardPile) {
     const newCard = document.createElement("div");
     newCard.classList.add("card", "discardCard");
