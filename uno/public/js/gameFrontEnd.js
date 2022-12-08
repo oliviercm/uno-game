@@ -410,6 +410,11 @@ function displayTurnBorder(turnHandKey) {
     }
     root.style.setProperty(`--${handElementKey}Border`, "hidden");
   }
-  document.getElementById(turnHandKey).style.border = "0rem";
+  if(turnHandKey === "myHand"){
+      document.getElementById(turnHandKey + "Border").style.border = "0rem";
+  } else {
+    document.getElementById(turnHandKey).style.border = "0rem";
+  }
+
   root.style.setProperty(`--${turnHandKey}Border`, "visible");
 }
