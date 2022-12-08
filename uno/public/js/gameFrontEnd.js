@@ -403,7 +403,11 @@ function displayTurnBorder(turnHandKey) {
   const handElementKeys = ["myHand", "rightOpponent", "topOpponent", "leftOpponent"];
   const root = document.querySelector(':root');
   for (const handElementKey of handElementKeys) {
-    document.getElementById(handElementKey).style.border = ".2rem solid yellow";
+    if(handElementKey === "myHand"){
+        document.getElementById(`${handElementKey}Border`).style.border = ".2rem solid yellow";
+    } else {
+        document.getElementById(handElementKey).style.border = ".2rem solid yellow";
+    }
     root.style.setProperty(`--${handElementKey}Border`, "hidden");
   }
   document.getElementById(turnHandKey).style.border = "0rem";
