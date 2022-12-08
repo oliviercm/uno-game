@@ -192,19 +192,13 @@ socket.on("game_state", (gameState) => {
     displayDiscardPile(discardPile);
   }
 
-  // display won or lost screen
+  // Display win/lose screen
   if (gameState?.ended === true) {
-    const winOrLose = gameState?.users.filter((users) => {
-      return users.user_id === currentUser.user_id;
-    });
-    for (const user of winOrLose) {
-      console.log(user.state);
-      if (user.state === 'WON') {
-        window.location.href = '#winner';
-      }
-      if (user.state === 'LOST') {
-        window.location.href = '#loser';
-      }
+    if (currentUserInGameState.state === 'WON') {
+      window.location.href = '#winner';
+    }
+    if (currentUserInGameState.state === 'LOST') {
+      window.location.href = '#loser';
     }
   }
 });
