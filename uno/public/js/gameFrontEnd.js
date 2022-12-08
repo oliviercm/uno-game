@@ -58,12 +58,8 @@ function createContainer(username, message) {
   <like></like>
   <p class="mb-0 text-white">${message}</p>
   </div>
-  </div>
-  
-  `;
+  </div>`;
 }
-
-startGameButton.addEventListener('click', startGame)
 
 function startGame() {
   const query = `/api/games/${gameId}/start`;
@@ -78,9 +74,7 @@ function startGame() {
       }
   });
 }
-
-leaveGameButton.addEventListener('click', leaveGame);
-
+startGameButton.addEventListener('click', startGame);
 
 function leaveGame() {
   const query = `/api/games/${gameId}/leave`;
@@ -95,19 +89,13 @@ function leaveGame() {
       }
   });
 }
+leaveGameButton.addEventListener('click', leaveGame);
 
-
-
-//  GAME STATE
-const gamePlayers = {
-  leftOpponent: '',
-  topOpponent: '',
-  rightOpponent: '',
-};
+// GAME STATE
 
 let discardPileDegree = [];
 for (let i = 0; i < 108; i++) {
-    discardPileDegree.push(Math.floor(Math.random() * 20) * (Math.round(Math.random()) ? 1 : -1));
+  discardPileDegree.push(Math.floor(Math.random() * 20) * (Math.round(Math.random()) ? 1 : -1));
 }
 
 let currentUser;
@@ -122,145 +110,129 @@ fetch('/api/users/current').then((response) => {
   }
 });
 
-
-let host;
 socket.on("game_state", (gameState) => {
-    console.log(gameState)
-    host = gameState?.users.filter(user => {
-      return user.is_host === true;
-    })
+  console.log(gameState);
 
-    
-    if(currentUser.user_id === host[0].user_id){
+  // Determine if the current user is a spectator or a player
+  const currentUserInGameState = gameState.users.find(user => user.user_id === currentUser.user_id);
+  const userIsSpectator = !currentUserInGameState;
 
-      if(gameState?.started === false){
-      startGameButton.style.visibility = 'visible'
+  if (!userIsSpectator) {
+    // Change user seat order such that the current user has seat order of 0, and other users follow consecutively 1, 2, 3...
+    gameState.users = gameState.users.map(user => {
+      let normalizedSeatOrder = user.seat_order - (gameState.users.find(user => user.user_id === currentUser.user_id)).seat_order;
+      if (normalizedSeatOrder < 0) {
+        normalizedSeatOrder = gameState.users.length + normalizedSeatOrder;
       }
-    }
-    
-    //small issue with play order, if the player refreshes then the
-    if(gameState?.started === true){
-    const currentOpponents = gameState?.users.filter(opponent => {
-        return opponent.user_id !== currentUser.user_id;
-    }).sort((a, b) => a.play_order - b.play_order);
-
-    for (let opponent of currentOpponents) {
-        if (!gamePlayers[opponent]) {
-            Object.keys(gamePlayers).forEach(key => {
-                if (gamePlayers[key] === "") {
-                    gamePlayers[key] = opponent;
-                }
-            });
-        }
-    }
-
-
-    const deleteAssets = document.getElementById("myHand")
-
-    while (deleteAssets.firstChild) {
-        deleteAssets.removeChild(deleteAssets.firstChild);
-    }
-    const currentUserCards = gameState?.cards.filter(card => {
-        return card.user_id === currentUser.user_id;
-    }).sort((a, b) => a.order - b.order);
-    for (const card of currentUserCards) {
-        dealCard(card)
-    }
-
-    Object.keys(gamePlayers).forEach(key => {
-        if (gamePlayers[key] !== "") {
-            const currentOpponentCards = gameState?.cards.filter(card => {
-                return card.user_id === gamePlayers[key];
-            })
-            for (const card of currentOpponentCards) {
-                dealOpponentCard(Object.keys(gamePlayers).find(key => object[key] === value));
-            }
-        }
+      return {
+        ...user,
+        seat_order: normalizedSeatOrder,
+      };
     });
+  }
 
-    const deckStack = gameState?.cards.filter(card => {
-        return card.location === "DECK";
-    })
-    console.log(deckStack.length)
-    replenishDeck(deckStack.length)
+  // Display the "Start Game" button if the current user is the host and the game hasn't started yet
+  const host = gameState?.users.find(user => user.is_host);
+  if (currentUser.user_id === host.user_id) {
+    if (gameState?.started === false) {
+      startGameButton.style.visibility = 'visible';
+    }
+  }
 
+  // Display the current user's cards
+  const handElement = document.getElementById("myHand");
+  while (handElement.firstChild) {
+    handElement.removeChild(handElement.firstChild);
+  }
+  const currentUserCards = gameState?.cards.filter(card => {
+    return card.user_id === currentUser.user_id;
+  }).sort((a, b) => a.order - b.order);
+  for (const card of currentUserCards) {
+    displayOwnCard(card);
+  }
+  document.querySelector(':root').style.setProperty('--numCards', currentUserCards.length);
+  // Display turn border for self
+  if (currentUserInGameState && currentUserInGameState.play_order === 0) {
+    displayTurnBorder("myHand");
+  }
+
+  // Display opponent cards and name
+  const opponents = gameState.users
+    .filter(user => user.user_id !== currentUser.user_id)
+    .sort((opponent1, opponent2) => opponent2.seat_order - opponent1.seat_order);
+  const cardsInHands = gameState.cards.filter(card => card.location === "HAND");
+  // If there is only one opponent, display them on top. Otherwise, display opponents counter-clockwise
+  let orderToDisplayOpponents;
+  if (opponents.length === 1) {
+    orderToDisplayOpponents = ["topOpponent"];
+  } else {
+    orderToDisplayOpponents = ["rightOpponent", "topOpponent", "leftOpponent"];
+  }
+  for (let i = 0; i < opponents.length; i++) {
+    const numOpponentCards = cardsInHands.filter(card => card.user_id === opponents[i].user_id).length;
+    displayOpponentCards(orderToDisplayOpponents[i], numOpponentCards);
+    displayOpponentUsername(orderToDisplayOpponents[i], opponents[i].username);
+    // Display turn border for opponents
+    if (opponents[i].play_order === 0) {
+      displayTurnBorder(orderToDisplayOpponents[i]);
+    }
+  }
+
+  // Display deck
+  const deckStack = gameState?.cards.filter(card => {
+      return card.location === "DECK";
+  });
+  displayDeck(deckStack.length);
+
+  // Display discard pile if game is started
+  if (gameState.started) {
     const discardPile = gameState?.cards.filter(card => {
-        return card.location === "DISCARD"
+      return card.location === "DISCARD"
     }).sort((a, b) => a.order - b.order);
-
-    discardPileCard(discardPile);
-
-
+    displayDiscardPile(discardPile);
   }
 });
 
-
-
 socket.on('game_event', (gameEvent) => {
-    console.log(gameEvent)
-    switch (gameEvent.type) {
-        //Additional keys: user_id
-        case "PLAYER_JOINED":
-            break;
-        //Additional keys: user_id
-        case "PLAYER_LEFT":
-            break;
-        case "PLAYER_FORFEIT":
-            break;
-        case "DECK_SHUFFLED":
-            //replenishDeck();
-            break;
-        //Additional keys: user_id
-        case "DEALT_CARD":
-            visualizeDealtCard(gameEvent?.user_id);
-            break;
-        case "GAME_DELETED":
-            //?? what do we display here
-            // TODO: display message "the host has ended the game", redirect to lobby
-            break;
-        case "GAME_STARTED":
-            //TODO
-            //make 
-            break;
-        case "GAME_ENDED":
-            break;
-        case "CARD_PLAYED":
-            break;
-        default:
-            console.log("Unrecognized ")
-    }
+  console.log(gameEvent)
+  switch (gameEvent.type) {
+    case "PLAYER_JOINED":
+      //TODO: display message "X player has joined"
+      break;
+    case "PLAYER_LEFT":
+      //TODO: display message "X player has left"
+      break;
+    case "PLAYER_FORFEIT":
+      //TODO: display message "X player has forfeited"
+      break;
+    case "DECK_SHUFFLED":
+      //TODO: play an animation of the deck shuffling
+      break;
+    case "DEALT_CARD":
+      //TODO: play an animation of a card being dealt
+      break;
+    case "GAME_DELETED":
+      // TODO: display message "the host has ended the game", redirect to lobby
+      break;
+    case "GAME_STARTED":
+      //TODO: display message "the game has started"
+      break;
+    case "GAME_ENDED":
+      //TODO: display message "the game has ended"
+      break;
+    case "CARD_PLAYED":
+      //TODO: display an animation of a card being played
+      break;
+    default:
+      console.log(`Unrecognized game event: ${gameEvent.type}`);
+      break;
+  }
 })
 
-//TODO
-//direction of play matters
-function addPlayer(user_id) {
-  for (const opponent in gamePlayers) {
-    if (!gamePlayers[opponent]) {
-      gamePlayers[opponent] = user_id;
-      break;
-    }
-  }
-}
-
-function removePlayer(user_id) {
-  for (const opponent in gamePlayers) {
-    if (gamePlayers[opponent] === user_id) {
-      gamePlayers[opponent] = '';
-      break;
-    }
-  }
-}
-
-let lastDeckCard;
-//replenishDeck();
-
-//TODO
-//get number of cards reshuffled (maybe from DECK_RESHUFFLED io event)
-function replenishDeck(deckSize) {
+function displayDeck(deckSize) {
   while (deckContainer.firstChild) {
     deckContainer.removeChild(deckContainer.firstChild);
   }
- 
 
   for (let i = 0; i < deckSize; i++) {
     let elem = deckContainer;
@@ -268,32 +240,9 @@ function replenishDeck(deckSize) {
     newCard.classList.add('card', 'deckCard');
     elem.appendChild(newCard);
   }
-
-  // lastDeckCard = document
-  //   .getElementsByClassName('deckContainer')
-  //   .item(0).lastChild;
-  // lastDeckCard.addEventListener('click', takeAndDeal, false);
 }
 
-function takeAndDeal() {
-  lastDeckCard.remove();
-  lastDeckCard = document
-    .getElementsByClassName('deckContainer')
-    .item(0).lastChild;
-  dealCard();
-  lastDeckCard.addEventListener('click', takeAndDeal, false);
-}
-
-/**
- *             | |
- *             | |
- *             | |
- *            \   /
- *              ∨
- */
-
-function dealCard(card) {
-
+function displayOwnCard(card) {
   let elem = document.getElementById('myHand');
   let newCard = document.createElement('div');
   newCard.classList.add('card', 'myCard');
@@ -321,22 +270,38 @@ function dealCard(card) {
   elem.appendChild(newCard);
 }
 
-function dealOpponentCard(user_id) {
-  const key = Object.keys(gamePlayers).find(
-    (user_id) => obj[user_id] === value
-  );
-  const elem = getElementById(key);
-  let newCard = document.createElement('div');
-  newCard.classList.add('card', key + 'card');
+/**
+ * @param {String} opponentKey "topOpponent", "rightOpponent", "leftOpponent"
+ * @param {Number} amount Amount of cards to display in hand
+ */
+function displayOpponentCards(opponentKey, amount) {
+  const opponentHandElement = document.getElementById(opponentKey);
+  opponentHandElement.style.visibility = "visible";
+  const cardsAlreadyInOpponentsHand = opponentHandElement.childElementCount;
+  // Based on how many cards are already displayed and how many should be displayed, add or remove cards as necessary
+  if (cardsAlreadyInOpponentsHand < amount) {
+    for (let i = 0; i < amount - cardsAlreadyInOpponentsHand; i++) {
+      const newCard = document.createElement('div');
+      newCard.classList.add('card', `${opponentKey}Card`);
+      opponentHandElement.appendChild(newCard);
+    }
+  } else if (cardsAlreadyInOpponentsHand > amount) {
+    for (let i = 0; i < cardsAlreadyInOpponentsHand - amount; i++) {
+      opponentHandElement.removeChild(opponentHandElement.firstChild);
+    }
+  }
+  document.querySelector(':root').style.setProperty(`--${opponentKey}Cards`, amount);
 }
 
 /**
- *             | |
- *             | |
- *             | |
- *            \   /
- *              ∨
+ * @param {String} opponentKey "topOpponent", "rightOpponent", "leftOpponent"
+ * @param {String} username Username to display
  */
+function displayOpponentUsername(opponentKey, username) {
+  const opponentNameElement = document.getElementById(`${opponentKey}Name`);
+  opponentNameElement.style.visibility = "visible";
+  opponentNameElement.textContent = username;
+}
 
 //TODO
 //add timeout to play another card
@@ -406,32 +371,51 @@ function wildcard(card) {
   });
 }
 
-/**
- *             | |
- *             | |
- *             | |
- *            \   /
- *              ∨
- */
+function displayDiscardPile(discardPile) {
+  let degreeTracker = 0;
+  const discardPileElement = document.getElementsByClassName("discard").item(0);
+  while (discardPileElement.firstChild) {
+    discardPileElement.removeChild(discardPileElement.firstChild);
+  }
+  for (const card of discardPile) {
+    const newCard = document.createElement("div");
+    newCard.classList.add("card", "discardCard");
+    newCard.style.backgroundImage = "url(" + CARD_FILE[card.color][card.value] + ")";
+    newCard.style.transform = 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + '))';
+    discardPileElement.appendChild(newCard);
+    degreeTracker++;
+  }
+  const lastCard = discardPileElement.lastChild;
+  lastCard.animate([
+    { transform: 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + ')) scale(1.5)' },
+    { transform: 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + ')) scale(1)' }
+  ], {
+    duration: 300,
+    iterations: 1
+  })
+  lastCard.style.transform = 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + '))'
+}
 
-function discardPileCard(discardPile) {
-    let degreeTracker = 0;
-    for (const card of discardPile) {
-        let elem = document.getElementsByClassName("discard").item(0);
-        let newCard = document.createElement("div");
-        elem.appendChild(newCard);
-        newCard.classList.add("card", "discardCard");
-        newCard.style.backgroundImage = "url(" + CARD_FILE[card.color][card.value] + ")";
-        newCard.style.transform = 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + '))'
-        degreeTracker++;
-    }
-    let lastCard = document.getElementsByClassName("discard").item(0).lastChild;
-    lastCard.animate([
-        { transform: 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + ')) scale(1.5)' },
-        { transform: 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + ')) scale(1)' }
-    ], {
-        duration: 300,
-        iterations: 1
-    })
-    lastCard.style.transform = 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + '))'
+/**
+ * @param {String} turnHandKey "myHand", "rightOpponent", "topOpponent", "leftOpponent"
+ */
+function displayTurnBorder(turnHandKey) {
+  const root = document.querySelector(':root');
+
+  const handElementKeys = [
+    ["myHand", "myHandBorder"],
+    ["rightOpponent", "rightOpponent"],
+    ["topOpponent", "topOpponent"],
+    ["leftOpponent", "leftOpponent"],
+  ];
+
+  // Display default border for all players
+  for (const handElementKey of handElementKeys) {
+    document.getElementById(handElementKey[1]).style.border = ".2rem solid yellow";
+    root.style.setProperty(`--${handElementKey[0]}Border`, "hidden");
+  }
+
+  // Display colored border for turn player
+  document.getElementById(turnHandKey === "myHand" ? `${turnHandKey}Border` : turnHandKey).style.border = "0rem";
+  root.style.setProperty(`--${turnHandKey}Border`, "visible");
 }

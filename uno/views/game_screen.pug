@@ -7,34 +7,28 @@ head
     title Home
 script(src='/socket.io/socket.io.js')
 .gameScreenContainer
-    .discard
+    #discard.discard
         a Discard Pile
         .card.discardCard
     .deck
         a.reshuffleText Deck Empty
-        button.reshuffle(type="button") Reshuffle
         button.start-game START GAME
         .deckContainer
     .unoButtonContainer
         button.unoButton(type="button") Uno!
     .youDidNotSayUnoButtonContainer
         button.youDidNotSayUnoButton(type="button") You didn't say Uno!
+    #myHandBorder.hand
     #myHand.hand
-    #opNameLeft.opponentName Sophia
-    #leftOpponent.hand
-        .card.leftOpponentCard
-        .card.leftOpponentCard
-        .card.leftOpponentCard
-    #opNameTop.opponentName Troy
-    #topOpponent.hand
-        .card.topOpponentCard
-        .card.topOpponentCard
-        .card.topOpponentCard
-    #opNameRight.opponentName Olivier
-    #rightOpponent.hand
-        .card.rightOpponentCard
-        .card.rightOpponentCard
-        .card.rightOpponentCard
+    .leftOpponentContainer
+        #leftOpponentName.opponentName
+        #leftOpponent
+    .topOpponentContainer
+        #topOpponentName.opponentName
+        #topOpponent
+    .rightOpponentContainer
+        #rightOpponentName.opponentName
+        #rightOpponent
     .wildcardButtonContainer
     .container-chat
         .accordion-content
@@ -59,6 +53,3 @@ script(src='/socket.io/socket.io.js')
                 button#yellowbttn.choosebttn YELLOW
                 button#greenbttn.choosebttn GREEN
     
-
-
-
