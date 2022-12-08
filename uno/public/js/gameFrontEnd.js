@@ -152,7 +152,7 @@ socket.on("game_state", (gameState) => {
   }
   document.querySelector(':root').style.setProperty('--numCards', currentUserCards.length);
   // Display turn border for self
-  if (currentUserInGameState && currentUserInGameState.turn_order === 0) {
+  if (currentUserInGameState && currentUserInGameState.play_order === 0) {
     displayTurnBorder("myHand");
   }
 
@@ -173,7 +173,7 @@ socket.on("game_state", (gameState) => {
     displayOpponentCards(orderToDisplayOpponents[i], numOpponentCards);
     displayOpponentUsername(orderToDisplayOpponents[i], opponents[i].username);
     // Display turn border for opponents
-    if (opponents[i].turn_order === 0) {
+    if (opponents[i].play_order === 0) {
       displayTurnBorder(orderToDisplayOpponents[i]);
     }
   }
@@ -224,7 +224,7 @@ socket.on('game_event', (gameEvent) => {
       //TODO: display an animation of a card being played
       break;
     default:
-      console.log(`Unrecongnized game event: ${gameEvent.type}`);
+      console.log(`Unrecognized game event: ${gameEvent.type}`);
       break;
   }
 })
@@ -393,6 +393,9 @@ function displayDiscardPile(discardPile) {
   lastCard.style.transform = 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + '))'
 }
 
+/**
+ * @param {String} turnHandKey "myHand", "rightOpponent", "topOpponent", "leftOpponent"
+ */
 function displayTurnBorder(turnHandKey) {
   const handElementKeys = ["myHand", "rightOpponent", "topOpponent", "leftOpponent"];
   const root = document.querySelector(':root');
