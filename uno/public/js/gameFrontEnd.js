@@ -191,6 +191,22 @@ socket.on("game_state", (gameState) => {
     }).sort((a, b) => a.order - b.order);
     displayDiscardPile(discardPile);
   }
+
+  // display won or lost screen
+  if (gameState?.ended === true) {
+    const winOrLose = gameState?.users.filter((users) => {
+      return users.user_id === currentUser.user_id;
+    });
+    for (const user of winOrLose) {
+      console.log(user.state);
+      if (user.state === 'WON') {
+        window.location.href = '#winner';
+      }
+      if (user.state === 'LOST') {
+        window.location.href = '#loser';
+      }
+    }
+  }
 });
 
 socket.on('game_event', (gameEvent) => {
@@ -419,3 +435,9 @@ function displayTurnBorder(turnHandKey) {
   document.getElementById(turnHandKey === "myHand" ? `${turnHandKey}Border` : turnHandKey).style.border = "0rem";
   root.style.setProperty(`--${turnHandKey}Border`, "visible");
 }
+
+//Button on end game screen return to lobby
+const returnLobby = document.querySelectorAll('.lobby-button');
+returnLobby.forEach(el => el.addEventListener('click', event => {
+  window.location.href = '/lobby'
+}));
