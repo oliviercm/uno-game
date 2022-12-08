@@ -400,21 +400,22 @@ function displayDiscardPile(discardPile) {
  * @param {String} turnHandKey "myHand", "rightOpponent", "topOpponent", "leftOpponent"
  */
 function displayTurnBorder(turnHandKey) {
-  const handElementKeys = ["myHand", "rightOpponent", "topOpponent", "leftOpponent"];
   const root = document.querySelector(':root');
+
+  const handElementKeys = [
+    ["myHand", "myHandBorder"],
+    ["rightOpponent", "rightOpponent"],
+    ["topOpponent", "topOpponent"],
+    ["leftOpponent", "leftOpponent"],
+  ];
+
+  // Display default border for all players
   for (const handElementKey of handElementKeys) {
-    if(handElementKey === "myHand"){
-        document.getElementById(`${handElementKey}Border`).style.border = ".2rem solid yellow";
-    } else {
-        document.getElementById(handElementKey).style.border = ".2rem solid yellow";
-    }
-    root.style.setProperty(`--${handElementKey}Border`, "hidden");
-  }
-  if(turnHandKey === "myHand"){
-      document.getElementById(turnHandKey + "Border").style.border = "0rem";
-  } else {
-    document.getElementById(turnHandKey).style.border = "0rem";
+    document.getElementById(handElementKey[1]).style.border = ".2rem solid yellow";
+    root.style.setProperty(`--${handElementKey[0]}Border`, "hidden");
   }
 
+  // Display colored border for turn player
+  document.getElementById(turnHandKey === "myHand" ? `${turnHandKey}Border` : turnHandKey).style.border = "0rem";
   root.style.setProperty(`--${turnHandKey}Border`, "visible");
 }
