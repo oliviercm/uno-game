@@ -19,13 +19,17 @@ script(src='/socket.io/socket.io.js')
     .youDidNotSayUnoButtonContainer
         button.youDidNotSayUnoButton(type="button") You didn't say Uno!
     #myHandBorder.hand
-    #myHand.hand
+    #myHandContainer
+        #myHand.hand
+    #leftOpponentBorder
     .leftOpponentContainer
         #leftOpponentName.opponentName
         #leftOpponent
+    #topOpponentBorder
     .topOpponentContainer
         #topOpponentName.opponentName
         #topOpponent
+    #rightOpponentBorder
     .rightOpponentContainer
         #rightOpponentName.opponentName
         #rightOpponent
