@@ -467,11 +467,13 @@ function displayTurnBorder(turnHandKey) {
   root.style.setProperty(`--${turnHandKey}Border`, "visible");
 }
 
+
 function animateDealtCard(user_id) {
   const player = document.getElementsByClassName(playerMap.get(user_id));
   //choose random card
   let cardnumber = Math.floor(Math.random() * player.children.length) * (Math.round(Math.random()));
 }
+
 
 //Button on end game screen return to lobby
 const returnLobby = document.querySelectorAll('.lobby-button');
