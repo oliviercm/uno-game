@@ -697,7 +697,7 @@ class Game {
 
     // If discard card is a wildcard, allow play if it is black (only happens at beginning of game, if the first card is a wildcard).
     if (topDiscardCard.color === "BLACK") {
-      // Allow play if ithe wildcard doesn't have a color (only happens at beginning of game, if the first card that was dealt automatically is a wildcard).
+      // Allow play if the wildcard doesn't have a color (only happens at beginning of game, if the first card that was dealt automatically is a wildcard).
       if (!chosenWildcardColor) {
         return true;
       } else if (card.color === chosenWildcardColor) {
