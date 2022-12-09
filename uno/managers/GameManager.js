@@ -38,6 +38,16 @@ class GameManager {
     return games;
   }
 
+  async getJoinableGames() {
+    const getJoinableGames = new pgp.PreparedStatement({
+      name: "get-joinable-games",
+      text: "SELECT * FROM games WHERE started = FALSE AND ended = FALSE",
+    });
+    const games = await db.query(getJoinableGames);
+
+    return games;
+  }
+
   async createNewGame(hostUserId) {
     const newGameId = await db.tx(async t => {
       const createGame = new pgp.PreparedStatement({

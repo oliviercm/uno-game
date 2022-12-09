@@ -64,14 +64,14 @@ function createContainer(username, message) {
 function startGame() {
   const query = `/api/games/${gameId}/start`;
   fetch(query, {
-      method: 'POST',
-      credentials: 'include',
+    method: 'POST',
+    credentials: 'include',
   }).then((response) => {
-      if (response.status == 200) {
-        startGameButton.style.visibility = 'hidden'
-      } else {
-          alert('ERROR_start_game');
-      }
+    if (response.status == 200) {
+      startGameButton.style.visibility = 'hidden'
+    } else {
+      alert('ERROR_start_game');
+    }
   });
 }
 startGameButton.addEventListener('click', startGame);
@@ -79,14 +79,14 @@ startGameButton.addEventListener('click', startGame);
 function leaveGame() {
   const query = `/api/games/${gameId}/leave`;
   fetch(query, {
-      method: 'POST',
-      credentials: 'include',
+    method: 'POST',
+    credentials: 'include',
   }).then((response) => {
-      if (response.status == 200) {
-        window.location.href = "/lobby"
-      } else {
-          alert('ERROR_leave_game');
-      }
+    if (response.status == 200) {
+      window.location.href = "/lobby"
+    } else {
+      alert('ERROR_leave_game');
+    }
   });
 }
 leaveGameButton.addEventListener('click', leaveGame);
@@ -109,6 +109,12 @@ fetch('/api/users/current').then((response) => {
     alert('Not logged in');
   }
 });
+let playerMap = new Map();
+let visualVars = {
+  opponentContainerSize: 510,
+  userContainerSize: 800,
+  cardSize: 110
+}
 
 socket.on("game_state", (gameState) => {
   console.log(gameState);
@@ -139,6 +145,7 @@ socket.on("game_state", (gameState) => {
     }
   }
 
+
   // Display the current user's cards
   const handElement = document.getElementById("myHand");
   while (handElement.firstChild) {
@@ -150,10 +157,23 @@ socket.on("game_state", (gameState) => {
   for (const card of currentUserCards) {
     displayOwnCard(card);
   }
-  document.querySelector(':root').style.setProperty('--numCards', currentUserCards.length);
+
+  //If the game is started, update the visual vars
+  if (gameState?.started === true && gameState?.ended === false) {
+    visualVars.cardSize = document.getElementById("myHand").children[0].clientWidth;
+    visualVars.opponentContainerSize = document.getElementById("topOpponent").clientWidth;
+    visualVars.userContainerSize = document.getElementById("myHand").clientWidth;
+  }
+  document.querySelector(':root').style.setProperty("--myHandOverlap", calculateOverlap(handElement.children.length) + "px");
+
+
   // Display turn border for self
   if (currentUserInGameState && currentUserInGameState.play_order === 0) {
     displayTurnBorder("myHand");
+  }
+
+  if (!playerMap.get(currentUser.user_id)) {
+    playerMap.set(currentUser.user_id, "myHand");
   }
 
   // Display opponent cards and name
@@ -161,6 +181,7 @@ socket.on("game_state", (gameState) => {
     .filter(user => user.user_id !== currentUser.user_id)
     .sort((opponent1, opponent2) => opponent2.seat_order - opponent1.seat_order);
   const cardsInHands = gameState.cards.filter(card => card.location === "HAND");
+
   // If there is only one opponent, display them on top. Otherwise, display opponents counter-clockwise
   let orderToDisplayOpponents;
   if (opponents.length === 1) {
@@ -168,10 +189,17 @@ socket.on("game_state", (gameState) => {
   } else {
     orderToDisplayOpponents = ["rightOpponent", "topOpponent", "leftOpponent"];
   }
+
   for (let i = 0; i < opponents.length; i++) {
     const numOpponentCards = cardsInHands.filter(card => card.user_id === opponents[i].user_id).length;
     displayOpponentCards(orderToDisplayOpponents[i], numOpponentCards);
     displayOpponentUsername(orderToDisplayOpponents[i], opponents[i].username);
+
+    //add player locations to non-instanced map for other function use (game_event)
+    if (!playerMap.get(opponents[i].user_id)) {
+      playerMap.set(opponents[i].user_id, orderToDisplayOpponents[i]);
+    }
+
     // Display turn border for opponents
     if (opponents[i].play_order === 0) {
       displayTurnBorder(orderToDisplayOpponents[i]);
@@ -180,7 +208,7 @@ socket.on("game_state", (gameState) => {
 
   // Display deck
   const deckStack = gameState?.cards.filter(card => {
-      return card.location === "DECK";
+    return card.location === "DECK";
   });
   displayDeck(deckStack.length);
 
@@ -219,6 +247,7 @@ socket.on('game_event', (gameEvent) => {
       //TODO: play an animation of the deck shuffling
       break;
     case "DEALT_CARD":
+      animateDealtCard(gameEvent.user_id);
       //TODO: play an animation of a card being dealt
       break;
     case "GAME_DELETED":
@@ -237,7 +266,7 @@ socket.on('game_event', (gameEvent) => {
       console.log(`Unrecognized game event: ${gameEvent.type}`);
       break;
   }
-})
+});
 
 function displayDeck(deckSize) {
   while (deckContainer.firstChild) {
@@ -255,6 +284,9 @@ function displayDeck(deckSize) {
 function displayOwnCard(card) {
   let elem = document.getElementById('myHand');
   let newCard = document.createElement('div');
+  let sizeControllerImg = document.createElement('img');
+  sizeControllerImg.src = ('/assets/Invisible.png');
+  newCard.appendChild(sizeControllerImg);
   newCard.classList.add('card', 'myCard');
   newCard.setAttribute('id', `${card.card_id}`);
   newCard.style.backgroundImage =
@@ -285,6 +317,7 @@ function displayOwnCard(card) {
  * @param {Number} amount Amount of cards to display in hand
  */
 function displayOpponentCards(opponentKey, amount) {
+
   const opponentHandElement = document.getElementById(opponentKey);
   opponentHandElement.style.visibility = "visible";
   const cardsAlreadyInOpponentsHand = opponentHandElement.childElementCount;
@@ -292,6 +325,9 @@ function displayOpponentCards(opponentKey, amount) {
   if (cardsAlreadyInOpponentsHand < amount) {
     for (let i = 0; i < amount - cardsAlreadyInOpponentsHand; i++) {
       const newCard = document.createElement('div');
+      const sizeControllerImg = document.createElement('img');
+      sizeControllerImg.classList.add(opponentKey + "Img");
+      newCard.appendChild(sizeControllerImg);
       newCard.classList.add('card', `${opponentKey}Card`);
       opponentHandElement.appendChild(newCard);
     }
@@ -300,8 +336,18 @@ function displayOpponentCards(opponentKey, amount) {
       opponentHandElement.removeChild(opponentHandElement.firstChild);
     }
   }
-  document.querySelector(':root').style.setProperty(`--${opponentKey}Cards`, amount);
+  document.querySelector(':root').style.setProperty(`--${opponentKey}Overlap`, calculateOverlap(opponentHandElement.children.length) + "px");
 }
+
+function calculateOverlap(numCards) {
+  let fullOverlapValue = (visualVars.cardSize * numCards) - visualVars.opponentContainerSize;
+  let overlapPerCard = ((fullOverlapValue / numCards) * -1) - (30 - numCards);
+  if (overlapPerCard > -15) {
+    return -15;
+  }
+  return overlapPerCard;
+}
+
 
 /**
  * @param {String} opponentKey "topOpponent", "rightOpponent", "leftOpponent"
@@ -406,29 +452,28 @@ function displayDiscardPile(discardPile) {
   lastCard.style.transform = 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + '))'
 }
 
+
 /**
  * @param {String} turnHandKey "myHand", "rightOpponent", "topOpponent", "leftOpponent"
  */
 function displayTurnBorder(turnHandKey) {
+  const handElementKeys = ["myHandBorder", "rightOpponentBorder", "topOpponentBorder", "leftOpponentBorder"];
   const root = document.querySelector(':root');
-
-  const handElementKeys = [
-    ["myHand", "myHandBorder"],
-    ["rightOpponent", "rightOpponent"],
-    ["topOpponent", "topOpponent"],
-    ["leftOpponent", "leftOpponent"],
-  ];
-
-  // Display default border for all players
   for (const handElementKey of handElementKeys) {
-    document.getElementById(handElementKey[1]).style.border = ".2rem solid yellow";
-    root.style.setProperty(`--${handElementKey[0]}Border`, "hidden");
+    document.getElementById(handElementKey).style.border = ".2rem solid yellow";
+    root.style.setProperty(`--${handElementKey}`, "hidden");
   }
-
-  // Display colored border for turn player
-  document.getElementById(turnHandKey === "myHand" ? `${turnHandKey}Border` : turnHandKey).style.border = "0rem";
+  document.getElementById(turnHandKey + "Border").style.border = "0rem";
   root.style.setProperty(`--${turnHandKey}Border`, "visible");
 }
+
+
+function animateDealtCard(user_id) {
+  const player = document.getElementsByClassName(playerMap.get(user_id));
+  //choose random card
+  let cardnumber = Math.floor(Math.random() * player.children.length) * (Math.round(Math.random()));
+}
+
 
 //Button on end game screen return to lobby
 const returnLobby = document.querySelectorAll('.lobby-button');

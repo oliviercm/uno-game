@@ -16,7 +16,7 @@ router.get("/", passport.session(), async (req, res, next) => {
     if (!req.user) {
       throw new ApiUnauthorizedError("Not logged in.");
     }
-    const games = await GameManager.getAllGames();
+    const games = await GameManager.getJoinableGames();
 
     return res.status(200).json({
       games: games,
