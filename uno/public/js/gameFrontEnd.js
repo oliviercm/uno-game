@@ -219,10 +219,16 @@ socket.on("game_state", (gameState) => {
     }).sort((a, b) => a.order - b.order);
     displayDiscardPile(discardPile);
   }
-  //Update size of card containers (just need one opponent since they should all be the same size)
-  // document.querySelector(':root').style.setProperty("--opponentContainerSize", document.getElementById("topOpponent").clientWidth);
-  // document.querySelector(':root').style.setProperty("--myContainerSize", document.getElementById("myHand").clientWidth);
-  // document.querySelector(':root').style.setProperty("--cardSize", document.getElementById("topOpponent").children[0].clientHeight);
+  
+  // Display win/lose screen
+  if (gameState?.ended === true) {
+    if (currentUserInGameState.state === 'WON') {
+      window.location.href = '#winner';
+    }
+    if (currentUserInGameState.state === 'LOST') {
+      window.location.href = '#loser';
+    }
+  }
 });
 
 socket.on('game_event', (gameEvent) => {
