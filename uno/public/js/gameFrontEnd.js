@@ -9,7 +9,9 @@ const leaveGameButton = document.querySelector('.leave-game');
 const wildcardButtonContainer = document.querySelector(
   '.wildcardButtonContainer'
 );
-const deckContainer = document.querySelector('.deckContainer')
+const colorIndicator = document.querySelector('.colorContainer');
+const alertIndicator = document.querySelector('.alertContainer');
+const deckContainer = document.querySelector('.deckContainer');
 const socket = io({
   path: '/games/',
   query: {
@@ -64,14 +66,14 @@ function createContainer(username, message) {
 function startGame() {
   const query = `/api/games/${gameId}/start`;
   fetch(query, {
-      method: 'POST',
-      credentials: 'include',
+    method: 'POST',
+    credentials: 'include',
   }).then((response) => {
-      if (response.status == 200) {
+    if (response.status == 200) {
         startGameButton.style.visibility = 'hidden'
-      } else {
-          alert('ERROR_start_game');
-      }
+    } else {
+      alert('ERROR_start_game');
+    }
   });
 }
 startGameButton.addEventListener('click', startGame);
@@ -79,14 +81,14 @@ startGameButton.addEventListener('click', startGame);
 function leaveGame() {
   const query = `/api/games/${gameId}/leave`;
   fetch(query, {
-      method: 'POST',
-      credentials: 'include',
+    method: 'POST',
+    credentials: 'include',
   }).then((response) => {
-      if (response.status == 200) {
+    if (response.status == 200) {
         window.location.href = "/lobby"
-      } else {
-          alert('ERROR_leave_game');
-      }
+    } else {
+      alert('ERROR_leave_game');
+    }
   });
 }
 leaveGameButton.addEventListener('click', leaveGame);
@@ -145,7 +147,7 @@ socket.on("game_state", (gameState) => {
     handElement.removeChild(handElement.firstChild);
   }
   const currentUserCards = gameState?.cards.filter(card => {
-    return card.user_id === currentUser.user_id;
+      return card.user_id === currentUser.user_id;
   }).sort((a, b) => a.order - b.order);
   for (const card of currentUserCards) {
     displayOwnCard(card);
@@ -192,7 +194,19 @@ socket.on("game_state", (gameState) => {
     displayDiscardPile(discardPile);
   }
 
-  // display won or lost screen
+  // Display current color and event card alerts
+  if (gameState?.started === true) {
+    const discardPile = gameState?.cards
+      .filter((card) => {
+        return card.location === 'DISCARD';
+      })
+      .sort((a, b) => b.order - a.order);
+    console.log(discardPile);
+    discardColor(discardPile, gameState);
+    eventAlert(discardPile);
+  }
+
+  // Display won or lost screen
   if (gameState?.ended === true) {
     const winOrLose = gameState?.users.filter((users) => {
       return users.user_id === currentUser.user_id;
@@ -406,7 +420,7 @@ function displayDiscardPile(discardPile) {
     { transform: 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + ')) scale(1.5)' },
     { transform: 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + ')) scale(1)' }
   ], {
-    duration: 300,
+      duration: 300,
     iterations: 1
   })
   lastCard.style.transform = 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + '))'
@@ -438,6 +452,76 @@ function displayTurnBorder(turnHandKey) {
 
 //Button on end game screen return to lobby
 const returnLobby = document.querySelectorAll('.lobby-button');
-returnLobby.forEach(el => el.addEventListener('click', event => {
-  window.location.href = '/lobby'
-}));
+returnLobby.forEach((el) =>
+  el.addEventListener('click', (event) => {
+    window.location.href = '/lobby';
+  })
+);
+
+// Display current color of discard pile
+function discardColor(discardPile, gameState) {
+  let currentColor = discardPile[0].color;
+  const wildcardColor = gameState.chosen_wildcard_color;
+
+  if (wildcardColor != null) {
+    currentColor = wildcardColor;
+  }
+  if (currentColor === 'YELLOW') {
+    colorIndicator.style.borderWidth = '25px 0 25px 40px';
+    colorIndicator.style.borderColor =
+      'transparent transparent transparent #fbb300';
+  }
+  if (currentColor === 'RED') {
+    colorIndicator.style.borderWidth = '25px 0 25px 40px';
+    colorIndicator.style.borderColor =
+      'transparent transparent transparent #d53e33';
+  }
+  if (currentColor === 'GREEN') {
+    colorIndicator.style.borderWidth = '25px 0 25px 40px';
+    colorIndicator.style.borderColor =
+      'transparent transparent transparent #399953';
+  }
+  if (currentColor === 'BLUE') {
+    colorIndicator.style.borderWidth = '25px 0 25px 40px';
+    colorIndicator.style.borderColor =
+      'transparent transparent transparent #377af5';
+  }
+}
+
+function eventAlert(discardPile) {
+  const eventAction = discardPile[0].value;
+  console.log(eventAction);
+
+
+  alertIndicator.style.display = "block";
+  alertIndicator.style.textAlign = "center";
+  alertIndicator.style.width = alertIndicator.innerText.width + "px";
+
+  if(eventAction === "WILD_CARD" || eventAction === "DRAW_FOUR"){
+    alertIndicator.innerText = "COLOR CHANGE";
+    setTimeout(function() {
+    }, 500);
+    setTimeout(function() {
+      alertIndicator.style.display = "none";
+    }, 1000);
+  } else if(eventAction === "REVERSE"){
+    alertIndicator.innerText = "REVERSE";
+    setTimeout(function() {
+    }, 500);
+    setTimeout(function() {
+      alertIndicator.style.display = "none";
+    }, 1000);
+  } else if(eventAction === "SKIP"){
+    alertIndicator.innerText = "TURN SKIPPED";
+    setTimeout(function() {
+    }, 500);
+    setTimeout(function() {
+      alertIndicator.style.display = "none";
+    }, 1000);
+  } else {
+    alertIndicator.innerText = "";
+  }
+
+  
+
+}
