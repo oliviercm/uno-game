@@ -1,6 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Lobster&display=swap");
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Nunito&family=Nunito+Sans:wght@700&display=swap');
 @import url('https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Bowlby+One+SC&display=swap');
 
 /* http://meyerweb.com/eric/tools/css/reset/ 
    v2.0 | 20110126
@@ -201,10 +202,11 @@ body {
     justify-content: center;
     align-items: center;
     gap: 20px;
+    z-index: 2;
 }
 
 .reshuffle {
-    z-index: 1;
+    z-index: 2;
     text-decoration: none;
     border-radius: 2rem;
     border: 0.12vw solid black;
@@ -798,6 +800,7 @@ body {
 button.accordion {
     font-family: 'Nunito Sans', sans-serif;
     width: 100%;
+    max-width: 350px;
     background-color: #c9c9c9;
     border-top: 2px solid #151515;
     border-right: 2px solid #151515;
@@ -836,6 +839,7 @@ button.accordion.is-open {
     font-family: 'DM Sans', sans-serif;
     font-size: 20px;
     width: 100%;
+    max-width: 350px;
     background-color: white;
     border-left: 1px solid whitesmoke;
     border-right: 1px solid #151515;
@@ -982,6 +986,7 @@ button.accordion.is-open {
     font-size: 20px;
     height: 50px;
     width: 20%;
+    max-width: 350px;
     position:absolute;
     bottom: 0px;
     right: 0px;
@@ -1020,3 +1025,47 @@ button.accordion.is-open {
     background-color: #0c870c;
     transform: translateY(4px);
   }
+
+  /* COLOR AND ALERT */
+.colorContainer {
+    width: 0;
+    height: 0;
+    border-style: solid;
+    
+
+}
+
+.alertContainer{
+    position: absolute;
+    top: 22vh;
+    z-index: 10;
+    text-align: center;
+    font-size: 60px;
+    font-family: 'Bowlby One SC', cursive;
+    animation: rainbow 1s linear infinite;
+}
+
+@keyframes rainbow {
+    0% {
+      color: #d53e33;
+    }
+    25% {
+      color: #fbb300;
+    }
+    75% {
+      color: #377af5;
+    }
+    100% {
+      color: #399953;
+    }
+  }
+  
+
+
+
+/* SKIP, REVERSE, WILD_CARD, DRAW_FOUR */
+
+
+
+/* COLOR AND ALERT END */
+
