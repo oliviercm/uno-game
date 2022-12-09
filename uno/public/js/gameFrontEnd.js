@@ -159,7 +159,7 @@ socket.on("game_state", (gameState) => {
   }
 
   //If the game is started, update the visual vars
-  if (gameState?.started === true) {
+  if (gameState?.started === true && gameState?.ended === false) {
     visualVars.cardSize = document.getElementById("myHand").children[0].clientWidth;
     visualVars.opponentContainerSize = document.getElementById("topOpponent").clientWidth;
     visualVars.userContainerSize = document.getElementById("myHand").clientWidth;
