@@ -110,11 +110,17 @@ fetch('/api/users/current').then((response) => {
   }
 });
 let playerMap = new Map();
+
 let visualVars = {
+  //base values, updates as soon as the game starts
   opponentContainerSize: 510,
   userContainerSize: 800,
   cardSize: 110
 }
+
+//TRUE === CLOCKWISE
+//FALSE === COUNTERCLOCKWISE
+let directionOfPlay = true;
 
 socket.on("game_state", (gameState) => {
   console.log(gameState);
@@ -247,7 +253,7 @@ socket.on('game_event', (gameEvent) => {
       //TODO: play an animation of the deck shuffling
       break;
     case "DEALT_CARD":
-      animateDealtCard(gameEvent.user_id);
+      //animateDealtCard(gameEvent.user_id);
       //TODO: play an animation of a card being dealt
       break;
     case "GAME_DELETED":
@@ -260,7 +266,12 @@ socket.on('game_event', (gameEvent) => {
       //TODO: display message "the game has ended"
       break;
     case "CARD_PLAYED":
+      animatePlayedCard(gameEvent.user_id, gameEvent.card_color, gameEvent.card_value);
       //TODO: display an animation of a card being played
+      break;
+    case "SKIPPED_TURN":
+      break;
+    case "REVERSED_TURNS":
       break;
     default:
       console.log(`Unrecognized game event: ${gameEvent.type}`);
@@ -339,6 +350,11 @@ function displayOpponentCards(opponentKey, amount) {
   document.querySelector(':root').style.setProperty(`--${opponentKey}Overlap`, calculateOverlap(opponentHandElement.children.length) + "px");
 }
 
+/**
+ * 
+ * @param {int} numCards number of cards in a hand
+ * @returns calculated overlap per card so that they fit inside a container
+ */
 function calculateOverlap(numCards) {
   let fullOverlapValue = (visualVars.cardSize * numCards) - visualVars.opponentContainerSize;
   let overlapPerCard = ((fullOverlapValue / numCards) * -1) - (30 - numCards);
@@ -474,6 +490,128 @@ function animateDealtCard(user_id) {
   let cardnumber = Math.floor(Math.random() * player.children.length) * (Math.round(Math.random()));
 }
 
+function animatePlayedCard(user_id, card_color, card_value) {
+  switch (card_value) {
+    case "REVERSE":
+      animateReverse();
+      break;
+    case "SKIP":
+      animateSkip();
+      break;
+    case "DRAW_TWO":
+      animateDrawTwo();
+      break;
+    case "DRAW_FOUR":
+      animateDrawFour();
+      break;
+  }
+}
+
+/**
+ * Displays and animates the reverse symbol
+ */
+function animateReverse() {
+  let reverse = document.getElementById("reverse");
+  let reverseContainer = document.getElementById("reverseContainer");
+  reverse.style.visibility = "visible"
+  reverseContainer.style.animationName = "bounce";
+  reverseContainer.style.zIndex = "4";
+
+  //CLOCKWISE
+  if (directionOfPlay === true) {
+    reverse.animate([
+      { transform: 'rotate(0deg) scale(1.5)' },
+      { transform: 'rotate(270deg) scale(1.5)' }
+    ], {
+      duration: 3000,
+      iterations: 1
+    })
+    directionOfPlay = !directionOfPlay;
+
+    //COUNTERCLOCKWISE
+  } else {
+    reverse.animate([
+      { transform: 'rotate(0deg) scaleX(-1) scale(1.25)' },
+      { transform: 'rotate(-270deg) scaleX(-1) scale(1.25)' }
+    ], {
+      duration: 3000,
+      iterations: 1
+    })
+    directionOfPlay = !directionOfPlay;
+  }
+  setTimeout(() => {
+    reverse.style.opacity = 0;
+    reverseContainer.style.animationName = "";
+  }, "1000")
+  setTimeout(() => {
+    reverse.style.visibility = "hidden"
+    reverseContainer.style.zIndex = "-4";
+    reverse.style.opacity = 1;
+  }, "2950")
+  reverse.opacity = 1;
+}
+
+/**
+ * Displays and animates the skip symbol
+ */
+function animateSkip() {
+  let skip = document.getElementById("skip");
+  let skipContainer = document.getElementById("skipContainer");
+  skip.style.visibility = "visible"
+  skipContainer.style.animationName = "bounce";
+  skipContainer.style.zIndex = "4";
+  setTimeout(() => {
+    skip.style.opacity = 0;
+    skipContainer.style.animationName = "";
+  }, "1000");
+  setTimeout(() => {
+    skip.style.visibility = "hidden"
+    skipContainer.style.zIndex = "-4";
+    skip.style.opacity = 1;
+  }, "1950");
+}
+
+/**
+ * Displays and animates the draw four symbol
+ */
+function animateDrawFour() {
+  let drawFour = document.getElementById("plusFour");
+  let drawFourContainer = document.getElementById("plusFourContainer");
+  drawFour.style.visibility = "visible"
+  drawFourContainer.style.animationName = "bounce";
+  drawFourContainer.style.zIndex = "4";
+  setTimeout(() => {
+    drawFour.style.opacity = 0;
+    drawFourContainer.style.animationName = "";
+  }, "1000");
+  setTimeout(() => {
+    drawFour.style.visibility = "hidden"
+    drawFourContainer.style.zIndex = "-4";
+    drawFour.style.opacity = 1;
+  }, "1950"); drawFour
+
+}
+
+/**
+ * Displays and animates the draw two symbol
+ */
+function animateDrawTwo() {
+  let drawTwo = document.getElementById("plusTwo");
+  let drawTwoContainer = document.getElementById("plusTwoContainer");
+  drawTwo.style.visibility = "visible"
+  drawTwoContainer.style.animationName = "bounce";
+  drawTwoContainer.style.zIndex = "4";
+  setTimeout(() => {
+    drawTwo.style.opacity = 0;
+    drawTwoContainer.style.animationName = "";
+  }, "1000");
+  setTimeout(() => {
+    drawTwo.style.visibility = "hidden"
+    drawTwoContainer.style.zIndex = "-4";
+    drawTwo.style.opacity = 1;
+  }, "1950");
+
+}
 
 //Button on end game screen return to lobby
 const returnLobby = document.querySelectorAll('.lobby-button');
