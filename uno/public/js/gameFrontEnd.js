@@ -504,19 +504,26 @@ function animateDealtCard(user_id) {
   let cardnumber = Math.floor(Math.random() * player.children.length) * (Math.round(Math.random()));
 }
 
+let colorMap = {
+  GREEN: "brightness(0) saturate(100%) invert(57%) sepia(8%) saturate(3387%) hue-rotate(82deg) brightness(84%) contrast(89%)",
+  RED: "brightness(0) saturate(100%) invert(26%) sepia(62%) saturate(2895%) hue-rotate(339deg) brightness(95%) contrast(94%)",
+  YELLOW: "brightness(0) saturate(100%) invert(76%) sepia(97%) saturate(868%) hue-rotate(336deg) brightness(104%) contrast(101%)",
+  BLUE: "brightness(0) saturate(100%) invert(39%) sepia(99%) saturate(745%) hue-rotate(163deg) brightness(98%) contrast(105%)"
+}
+
 function animatePlayedCard(user_id, card_color, card_value) {
   switch (card_value) {
     case "REVERSE":
-      animateReverse();
+      animateReverse(card_color);
       break;
     case "SKIP":
-      animateSkip();
+      animateSkip(card_color);
       break;
     case "DRAW_TWO":
-      animateDrawTwo();
+      animateDrawTwo(card_color);
       break;
     case "DRAW_FOUR":
-      animateDrawFour();
+      animateDrawFour(card_color);
       break;
   }
 }
@@ -524,10 +531,11 @@ function animatePlayedCard(user_id, card_color, card_value) {
 /**
  * Displays and animates the reverse symbol
  */
-function animateReverse() {
+function animateReverse(card_color) {
   let reverse = document.getElementById("reverse");
   let reverseContainer = document.getElementById("reverseContainer");
   reverse.style.visibility = "visible"
+  reverse.style.filter= colorMap[card_color];
   reverseContainer.style.animationName = "bounce";
   reverseContainer.style.zIndex = "4";
 
@@ -568,9 +576,10 @@ function animateReverse() {
 /**
  * Displays and animates the skip symbol
  */
-function animateSkip() {
+function animateSkip(card_color) {
   let skip = document.getElementById("skip");
   let skipContainer = document.getElementById("skipContainer");
+  skip.style.filter= colorMap[card_color];
   skip.style.visibility = "visible"
   skipContainer.style.animationName = "bounce";
   skipContainer.style.zIndex = "4";
@@ -588,9 +597,10 @@ function animateSkip() {
 /**
  * Displays and animates the draw four symbol
  */
-function animateDrawFour() {
+function animateDrawFour(card_color) {
   let drawFour = document.getElementById("plusFour");
   let drawFourContainer = document.getElementById("plusFourContainer");
+  drawFour.style.filter= colorMap[card_color];
   drawFour.style.visibility = "visible"
   drawFourContainer.style.animationName = "bounce";
   drawFourContainer.style.zIndex = "4";
@@ -609,9 +619,10 @@ function animateDrawFour() {
 /**
  * Displays and animates the draw two symbol
  */
-function animateDrawTwo() {
+function animateDrawTwo(card_color) {
   let drawTwo = document.getElementById("plusTwo");
   let drawTwoContainer = document.getElementById("plusTwoContainer");
+  drawTwo.style.filter= colorMap[card_color];
   drawTwo.style.visibility = "visible"
   drawTwoContainer.style.animationName = "bounce";
   drawTwoContainer.style.zIndex = "4";
