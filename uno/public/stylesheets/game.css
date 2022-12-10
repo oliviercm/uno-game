@@ -149,9 +149,6 @@ table {
 
 :root {
     --numCards: 0;
-    --leftOpponentCards: 0;
-    --rightOpponentCards: 0;
-    --topOpponentCards: 0;
     --myHandBorder: hidden;
     --leftOpponentBorder: hidden;
     --topOpponentBorder: hidden;
@@ -160,9 +157,6 @@ table {
     --topOpponentOverlap: -20px;
     --rightOpponentOverlap: -20px;
     --myHandOverlap: -20px;
-    /* --opponentContainerSize: 120;
-    --myContainerSize: 250;
-    --cardSize: 109; */
 }
 
 html {
@@ -480,6 +474,7 @@ body {
     align-items: center;
     z-index: 1;
     height: 21vh;
+    max-width: 100%;
 }
 
 #myHandContainer {
@@ -500,15 +495,17 @@ body {
 #myHandBorder {
     display: flex;
     overflow: hidden;
+    justify-content: center;
+    align-items: center;
     border: .2rem solid yellow;
     border-radius: 1rem;
     border-bottom-left-radius: 0%;
     border-bottom-right-radius: 0%;
     border-bottom: 0px;
     z-index: 0;
-    width: 50%;
+    width: 55%;
     left: 50%;
-    margin-left: -25%;
+    margin-left: -26.5%;
     height: 22vh;
     bottom: 0px;
     transform: translateY(5%);
@@ -524,7 +521,7 @@ body {
     width: 21vh;
 }
 
-#leftOpponentBorder{
+#leftOpponentBorder {
     clip-path: polygon(3% 0, 100% 0, 100% 100%, 3% 100%);
     transform: translateX(-2%);
     border-radius: 10px;
@@ -532,13 +529,15 @@ body {
     border-bottom-left-radius: 0%;
     left: 0px;
 }
-#rightOpponentBorder{
+
+#rightOpponentBorder {
     clip-path: polygon(0 0, 97% 0, 97% 100%, 0 100%);
     border-top-right-radius: 0%;
     border-bottom-right-radius: 0%;
     right: 0px;
 }
-#topOpponentBorder{
+
+#topOpponentBorder {
     position: fixed;
     clip-path: polygon(0 3%, 100% 3%, 100% 100%, 0 100%);
     border-top: 0px;
@@ -554,7 +553,7 @@ body {
 
 #leftOpponentBorder,
 #rightOpponentBorder,
-#topOpponentBorder{
+#topOpponentBorder {
     display: flex;
     overflow: hidden;
     border-radius: 1rem;
@@ -609,12 +608,9 @@ body {
 
 #myHandBorder::after {
     content: '';
-    position: absolute;
     z-index: -1;
-    left: 6px;
-    top: 4px;
-    width: calc(100% - 10px);
-    height: calc(100% - 11px);
+    width: calc(100% - 14px);
+    height: calc(100% - 14px);
     border-radius: 10px;
 
 }
@@ -622,9 +618,11 @@ body {
 #leftOpponentBorder::before {
     visibility: var(--leftOpponentBorder);
 }
+
 #rightOpponentBorder::before {
     visibility: var(--rightOpponentBorder);
 }
+
 #topOpponentBorder::before {
     visibility: var(--topOpponentBorder);
 }
@@ -632,6 +630,7 @@ body {
 #myHandBorder::before {
     visibility: var(--myHandBorder);
 }
+
 #rightOpponentBorder::after {
     visibility: var(--rightOpponentBorder);
     background: radial-gradient(ellipse at right, #2d4a34, #213626);
@@ -671,16 +670,16 @@ body {
     max-height: 563px;
     width: 12.93vh;
     height: 18.73vh;
-    border-radius: .5rem;
+    border-radius: .85rem;
     box-shadow: 4px 4px 12px 2px rgba(0, 0, 0, 0.60);
     transition: 0.2s;
     margin: 0;
 }
 
-.card img{
+.card img {
     vertical-align: top;
-    width: 100%; 
-    opacity: 0;  
+    width: 100%;
+    opacity: 0;
 }
 
 .deckCard {
@@ -703,12 +702,24 @@ body {
 .addCard {
     margin-top: 200px;
 }
+
 .leftOpponentImg,
-.rightOpponentImg{
+.rightOpponentImg {
     content: url('/assets/InvisibleSide.png');
 }
-.topOpponentImg{
+
+.topOpponentImg {
     content: url('/assets/Invisible.png');
+}
+
+.rightOpponentCard{
+    filter: drop-shadow(10px 0 20px black);
+}
+.topOpponentCard{
+    filter: drop-shadow(0 -10px 20px black);
+}
+.leftOpponentCard {
+    filter: drop-shadow(-10px 0 20px black);
 }
 
 .leftOpponentCard {
@@ -747,7 +758,7 @@ body {
 
 .myCard:hover~.myCard,
 .myCard:focus-within~.myCard {
-    transform: translatex(calc(var(--numCards)*.5vh));
+    transform: translateX(calc(-1 * var(--myHandOverlap)));
 }
 
 .myCard:hover {
@@ -767,7 +778,7 @@ body {
 
 
 .rightOpponentCard:not(:first-child) {
-    
+
     margin-top: var(--rightOpponentOverlap);
 }
 
@@ -779,6 +790,86 @@ body {
 .topOpponentCard:not(:last-child) {
     margin-right: var(--topOpponentOverlap);
 }
+
+/* SPECIAL SYMBOLS*/
+
+#skipContainer,
+#reverseContainer,
+#plusTwoContainer,
+#plusFourContainer {
+    z-index: -5;
+    display: flex;
+    position: absolute;
+    animation-fill-mode: both;
+    animation-duration: 0.9s;
+}
+
+#reverse {
+    visibility: hidden;
+    background: center / contain no-repeat url('/assets/ReverseSymbol.png');
+    filter: drop-shadow(2px 2px #333);
+    width: 45vh;
+    height:45vh;
+    opacity: 1;
+    transition: opacity 1s ease-out;
+}
+
+#skip {
+    visibility: hidden;
+    background: center / contain no-repeat url('/assets/SkipSymbol.png');
+    filter: drop-shadow(2px 2px #333);
+    width: 45vh;
+    height:45vh;
+    opacity: 1;
+    transition: opacity 1s ease-out;
+}
+
+#plusTwoContainer{
+    left: 56vw
+}
+#plusFourContainer{
+    left: 54.5vw
+}
+
+#plusTwo{
+    visibility: hidden;
+    background: center / contain no-repeat url('/assets/PlusTwo.png');
+    width: 18vh;
+    height:18vh;
+    opacity: 1;
+    transition: opacity 1s ease-in-out;
+    filter: drop-shadow(2px 2px #333);
+}
+#plusFour{
+    visibility: hidden;
+    background: center / contain no-repeat url('/assets/PlusFour.png');
+    width: 24vh;
+    height:24vh;
+    opacity: 1;
+    transition: opacity 1s ease-in-out;
+    filter: drop-shadow(2px 2px #333);
+}
+@keyframes bounce {
+    0% {
+        opacity: 0;
+        transform: scale(.7);
+    }
+
+    40% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    60% {
+        transform: scale(.8);
+    }
+
+    80% {
+        transform: scale(1);
+    }
+}
+
+/* SPECIAL SYMBOLS END*/
 
 
 /* CHAT */
@@ -960,7 +1051,7 @@ button.accordion.is-open {
     font-size: 20px;
     height: 50%;
     width: 200%;
-    position:absolute;
+    position: absolute;
     top: 120%;
     right: 10%;
     border-color: #151515;
@@ -978,7 +1069,7 @@ button.accordion.is-open {
 .start-game:active {
     font-family: 'Nunito Sans', sans-serif;
     background-color: #998f02;
-    transform: translate(2px,2px);
+    transform: translate(2px, 2px);
 }
 
 .leave-game {
@@ -1005,7 +1096,7 @@ button.accordion.is-open {
 .leave-game:active {
     font-family: 'Nunito Sans', sans-serif;
     background-color: #126b0f;
-    transform: translate(2px,2px);
+    transform: translate(2px, 2px);
 }
 
 .lobby-button {
@@ -1017,9 +1108,10 @@ button.accordion.is-open {
     border-color: white;
     border-radius: 5px;
 }
+
 .lobby-button:hover {
     background-color: #0c870c;
-  }
+}
 
 .lobby-button:active {
     background-color: #0c870c;
