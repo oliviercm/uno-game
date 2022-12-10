@@ -192,4 +192,62 @@ router.post("/:gameId/play-card", passport.session(), async (req, res, next) => 
   }
 });
 
+/**
+ * POST /api/games/:gameId/say-uno
+ * 
+ * Say "UNO".
+ */
+router.post("/:gameId/say-uno", passport.session(), async (req, res, next) => {
+  try {
+    if (!req.user) {
+      throw new ApiUnauthorizedError("Not logged in.");
+    }
+
+    // Retrieve game instance
+    const game = await GameManager.getGameByGameId(req.params.gameId);
+    if (!game) {
+      throw new ApiNotFoundError(`Game with ID '${req.params.gameId}' does not exist.`);
+    }
+
+    // Say "UNO"
+    await game.sayUno(req.user.user_id);
+
+    return res.status(200).send();
+  } catch(e) {
+    next(e);
+  }
+});
+
+/**
+ * POST /api/games/:gameId/accuse-you-didnt-say-uno
+ * 
+ * Accuse another player of not saying "UNO".
+ */
+router.post("/:gameId/accuse-you-didnt-say-uno", passport.session(), async (req, res, next) => {
+  try {
+    if (!req.user) {
+      throw new ApiUnauthorizedError("Not logged in.");
+    }
+
+    // Verify request body has all required properties and has correct format
+    const schema = Joi.object({
+      accused_user_id: Joi.number().integer().required(),
+    });
+    const validated = await schema.validateAsync(req.body);
+
+    // Retrieve game instance
+    const game = await GameManager.getGameByGameId(req.params.gameId);
+    if (!game) {
+      throw new ApiNotFoundError(`Game with ID '${req.params.gameId}' does not exist.`);
+    }
+
+    // Accuse player of not saying "UNO"
+    await game.accuseYouDidntSayUno(req.user.user_id, validated.accused_user_id);
+
+    return res.status(200).send();
+  } catch(e) {
+    next(e);
+  }
+});
+
 module.exports = router;

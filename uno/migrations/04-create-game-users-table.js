@@ -38,6 +38,16 @@ module.exports = {
         type: Sequelize.BOOLEAN,
         allowNull: false,
       },
+      called_uno_turns_ago: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      had_one_card_turns_ago: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
     });
   },
   async down(queryInterface, Sequelize) {

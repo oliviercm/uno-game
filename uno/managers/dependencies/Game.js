@@ -614,6 +614,20 @@ class Game {
           await this.dealCard(nextPlayer.user_id, t);
         }
       }
+      // Record when player has 1 card in hand for "UNO" accusals
+      if (currentTurnPlayerCards.length === 2) { // 2 remaining before playing card, 1 card remaining after playing
+        await t.none(`UPDATE game_users SET had_one_card_turns_ago = 0 WHERE game_id = $1 AND user_id = $2`, [
+          this.id,
+          currentTurnPlayer.user_id,
+        ]);
+      }
+      // Increment turn counters.
+      await t.none(`UPDATE game_users SET called_uno_turns_ago = called_uno_turns_ago + 1 WHERE game_id = $1`, [
+        this.id,
+      ]);
+      await t.none(`UPDATE game_users SET had_one_card_turns_ago = had_one_card_turns_ago + 1 WHERE game_id = $1`, [
+        this.id,
+      ]);
       // Check win condition
       // If the player only had 1 card before playing the card (meaning the player has 0 cards after playing), the player wins.
       let gameEnded = false;
@@ -709,6 +723,60 @@ class Game {
   }
 
   /**
+   * Say "UNO".
+   */
+  async sayUno(userId) {
+    await db.none(`UPDATE game_users SET called_uno_turns_ago = 0 WHERE game_id = $1 AND user_id = $2`, [
+      this.id,
+      userId,
+    ]);
+    this.emitGameEvent({ type: "CALLED_UNO", user_id: userId });
+  }
+
+  /**
+   * Accuse a player of not saying "UNO".
+   * 
+   * The accused player must draw 4 cards if and only if:
+   *   - They have one card in hand
+   *   - They didn't say "UNO" recently (on their own turn or the turn after)
+   *   - The player after them hasn't played a card yet
+   * 
+   * In other words, there is a 1 turn window that a player may be successfully accused:
+   *   - AFTER they play their second to last card
+   *   - BEFORE the player after them plays a card
+   */
+  async accuseYouDidntSayUno(accuserUserId, accusedUserId) {
+    await db.tx(async t => {
+      let accusedPlayerDrewCards = false;
+      const accusedUser = await t.one(`SELECT called_uno_turns_ago, had_one_card_turns_ago FROM game_users WHERE game_id = $1 AND user_id = $2`, [
+        this.id,
+        accusedUserId,
+      ]);
+      const accusedUserCards = await this.getUserHandCards(accusedUserId, t);
+      // Check conditions for successful accusal
+      if (
+        accusedUserCards.length === 1 &&
+        accusedUser.had_one_card_turns_ago < 2 &&
+        accusedUser.called_uno_turns_ago >= 2
+      ) {
+        // Draw 4 cards if successfully accused
+        for (let i = 0; i < 4; i++) {
+          await this.dealCard(accusedUserId, t);
+        }
+        accusedPlayerDrewCards = true;
+      }
+      return {
+        accusedPlayerDrewCards,
+      };
+    }).then(results => {
+      this.emitGameEvent({ type: "ACCUSE_YOU_DIDNT_SAY_UNO", accuser_user_id: accuserUserId, accused_user_id: accusedUserId });
+      if (results.accusedPlayerDrewCards) {
+        this.emitGameStateToConnectedUsers();
+      }
+    });
+  }
+
+  /**
    * End the game with a winning user by setting user states to "WON" and "LOST", and setting the game as ended.
    */
   async endGameWithWinner(transaction, winningUserId) {
@@ -781,6 +849,12 @@ class Game {
    *    Additional keys: user_id
    * 
    * REVERSED_TURNS - The turn order was reversed.
+   * 
+   * CALLED_UNO - A player said "UNO".
+   *    Additional keys: user_id
+   * 
+   * ACCUSE_YOU_DIDNT_SAY_UNO - A player accused another player of not saying "UNO".
+   *    Additional keys: accuser_user_id, accused_user_id
    * 
    * GAME_DELETED - All players left before game started.
    * 
