@@ -12,6 +12,7 @@ const wildcardButtonContainer = document.querySelector(
 const colorIndicator = document.querySelector('.colorContainer');
 const alertIndicator = document.querySelector('.alertContainer');
 const deckContainer = document.querySelector('.deckContainer');
+const unoButtonContainer = document.getElementsByClassName("unoButtonContainer").item(0);
 const socket = io({
   path: '/games/',
   query: {
@@ -95,11 +96,6 @@ leaveGameButton.addEventListener('click', leaveGame);
 
 // GAME STATE
 
-let discardPileDegree = [];
-for (let i = 0; i < 108; i++) {
-  discardPileDegree.push(Math.floor(Math.random() * 20) * (Math.round(Math.random()) ? 1 : -1));
-}
-
 let currentUser;
 fetch('/api/users/current').then((response) => {
   if (response.status == 200) {
@@ -111,7 +107,13 @@ fetch('/api/users/current').then((response) => {
     alert('Not logged in');
   }
 });
+
 let playerMap = new Map();
+
+let discardPileDegree = [];
+for (let i = 0; i < 108; i++) {
+  discardPileDegree.push(Math.floor(Math.random() * 20) * (Math.round(Math.random()) ? 1 : -1));
+}
 
 let visualVars = {
   //base values, updates as soon as the game starts
@@ -123,6 +125,8 @@ let visualVars = {
 //TRUE === CLOCKWISE
 //FALSE === COUNTERCLOCKWISE
 let directionOfPlay = true;
+
+document.getElementById("unoButton").addEventListener('click', postSaidUno);
 
 socket.on("game_state", (gameState) => {
   console.log(gameState);
@@ -160,20 +164,24 @@ socket.on("game_state", (gameState) => {
     handElement.removeChild(handElement.firstChild);
   }
   const currentUserCards = gameState?.cards.filter(card => {
-      return card.user_id === currentUser.user_id;
+    return card.user_id === currentUser.user_id;
   }).sort((a, b) => a.order - b.order);
   for (const card of currentUserCards) {
     displayOwnCard(card);
   }
 
-  //If the game is started, update the visual vars
+  //If the game is started and not ended, update the visual vars
   if (gameState?.started === true && gameState?.ended === false) {
     visualVars.cardSize = document.getElementById("myHand").children[0].clientWidth;
     visualVars.opponentContainerSize = document.getElementById("topOpponent").clientWidth;
     visualVars.userContainerSize = document.getElementById("myHand").clientWidth;
   }
-  document.querySelector(':root').style.setProperty("--myHandOverlap", calculateOverlap(handElement.children.length) + "px");
+  document.querySelector(':root').style.setProperty("--myHandOverlap", calculateOverlap(handElement.childElementCount) + "px");
 
+  //display unoButton if user only has one card
+  if (handElement.childElementCount === 1) {
+    displayUnoButton();
+  }
 
   // Display turn border for self
   if (currentUserInGameState && currentUserInGameState.play_order === 0) {
@@ -201,6 +209,12 @@ socket.on("game_state", (gameState) => {
   for (let i = 0; i < opponents.length; i++) {
     const numOpponentCards = cardsInHands.filter(card => card.user_id === opponents[i].user_id).length;
     displayOpponentCards(orderToDisplayOpponents[i], numOpponentCards);
+
+    //show you didn't say uno button if opponent only has 1 card
+    if(numOpponentCards === 1) {
+      displayYouDidntSayUnoButton(opponents[i].user_id);
+    }
+
     displayOpponentUsername(orderToDisplayOpponents[i], opponents[i].username);
 
     //add player locations to non-instanced map for other function use (game_event)
@@ -287,6 +301,19 @@ socket.on('game_event', (gameEvent) => {
       break;
     case "REVERSED_TURNS":
       break;
+    case "CALLED_UNO":
+      // if (gameEvent.user_id !== currentUser.user_id) {
+      //   showOpponentCalledUno(user_id);
+      // }
+      break;
+    case "ACCUSE_YOU_DIDNT_SAY_UNO":
+      if (gameEvent.accused_user_id === currentUser.user_id) {
+        unoButtonContainer.style.visibility = "hidden";
+        //showOwnFailedUno();
+      } else {
+        //showOpponentFailedUno();
+      }
+      break;
     default:
       console.log(`Unrecognized game event: ${gameEvent.type}`);
       break;
@@ -361,17 +388,19 @@ function displayOpponentCards(opponentKey, amount) {
       opponentHandElement.removeChild(opponentHandElement.firstChild);
     }
   }
+
   document.querySelector(':root').style.setProperty(`--${opponentKey}Overlap`, calculateOverlap(opponentHandElement.children.length) + "px");
 }
 
 /**
- * 
  * @param {int} numCards number of cards in a hand
  * @returns calculated overlap per card so that they fit inside a container
  */
 function calculateOverlap(numCards) {
   let fullOverlapValue = (visualVars.cardSize * numCards) - visualVars.opponentContainerSize;
   let overlapPerCard = ((fullOverlapValue / numCards) * -1) - (30 - numCards);
+
+  //at least overlap a little bit
   if (overlapPerCard > -15) {
     return -15;
   }
@@ -476,7 +505,7 @@ function displayDiscardPile(discardPile) {
     { transform: 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + ')) scale(1.5)' },
     { transform: 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + ')) scale(1)' }
   ], {
-      duration: 300,
+    duration: 300,
     iterations: 1
   })
   lastCard.style.transform = 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + '))'
@@ -495,6 +524,81 @@ function displayTurnBorder(turnHandKey) {
   }
   document.getElementById(turnHandKey + "Border").style.border = "0rem";
   root.style.setProperty(`--${turnHandKey}Border`, "visible");
+}
+
+/**
+ * Displays the Uno Button and becomes clickable with function
+ */
+function displayUnoButton() {
+  unoButtonContainer.style.visibility = "visible";
+  setTimeout(() => {
+    unoButtonContainer.style.visibility = "hidden";
+  }, "10000")
+}
+
+/**
+ * Sends post request for saying uno (upon user clicking the Uno! button)
+ */
+function postSaidUno() {
+  const query = `/api/games/${gameId}/say-uno`;
+  let request = {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    }
+  };
+  fetch(query, request);
+
+  //hides unoButton
+  console.log(unoButtonContainer);
+  unoButtonContainer.style.opacity = "0";
+  setTimeout(() => {
+    unoButtonContainer.style.visibility = "hidden"
+  }, "1000")
+
+}
+
+/**
+ * 
+ * @param {String} user_id Opponent User ID that corresponds to the displayed You Didn't Say Uno! button
+ */
+function displayYouDidntSayUnoButton(user_id) {
+  let buttonContainer = document.getElementsByClassName("youDidNotSayUnoButtonContainer").item(0);
+  buttonContainer.style.visibility = "visible";
+  let youDidntSayUno = document.getElementById("youDidNotSayUnoButton");
+  youDidntSayUno.removeEventListener("click", postYouDidntSayUno, false);
+  youDidntSayUno.addEventListener("click", function(){
+    postYouDidntSayUno(user_id, buttonContainer);
+  }, false);
+  setTimeout(() => {
+    buttonContainer.style.visibility = "hidden";
+  }, "20000")
+}
+/**
+ * 
+ * @param {String} user_id Opponent user ID that will be accused of not saying Uno
+ * @param {String} buttonContainer Parent element that will have visibility set to "hidden"
+ */
+function postYouDidntSayUno(user_id, buttonContainer) {
+  console.log(user_id);
+  const query = `/api/games/${gameId}/accuse-you-didnt-say-uno`;
+  let request = {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      accused_user_id: user_id,
+    }),
+  };
+  fetch(query, request);
+  //hides unoButton
+  buttonContainer.style.opacity = "0";
+  setTimeout(() => {
+    buttonContainer.style.visibility = "hidden"
+  }, "1000")
 }
 
 
@@ -535,7 +639,7 @@ function animateReverse(card_color) {
   let reverse = document.getElementById("reverse");
   let reverseContainer = document.getElementById("reverseContainer");
   reverse.style.visibility = "visible"
-  reverse.style.filter= colorMap[card_color];
+  reverse.style.filter = colorMap[card_color];
   reverseContainer.style.animationName = "bounce";
   reverseContainer.style.zIndex = "4";
 
@@ -579,7 +683,7 @@ function animateReverse(card_color) {
 function animateSkip(card_color) {
   let skip = document.getElementById("skip");
   let skipContainer = document.getElementById("skipContainer");
-  skip.style.filter= colorMap[card_color];
+  skip.style.filter = colorMap[card_color];
   skip.style.visibility = "visible"
   skipContainer.style.animationName = "bounce";
   skipContainer.style.zIndex = "4";
@@ -600,7 +704,7 @@ function animateSkip(card_color) {
 function animateDrawFour(card_color) {
   let drawFour = document.getElementById("plusFour");
   let drawFourContainer = document.getElementById("plusFourContainer");
-  drawFour.style.filter= colorMap[card_color];
+  drawFour.style.filter = colorMap[card_color];
   drawFour.style.visibility = "visible"
   drawFourContainer.style.animationName = "bounce";
   drawFourContainer.style.zIndex = "4";
@@ -622,7 +726,7 @@ function animateDrawFour(card_color) {
 function animateDrawTwo(card_color) {
   let drawTwo = document.getElementById("plusTwo");
   let drawTwoContainer = document.getElementById("plusTwoContainer");
-  drawTwo.style.filter= colorMap[card_color];
+  drawTwo.style.filter = colorMap[card_color];
   drawTwo.style.visibility = "visible"
   drawTwoContainer.style.animationName = "bounce";
   drawTwoContainer.style.zIndex = "4";
@@ -685,31 +789,31 @@ function eventAlert(discardPile) {
   alertIndicator.style.textAlign = "center";
   alertIndicator.style.width = alertIndicator.innerText.width + "px";
 
-  if(eventAction === "WILD_CARD" || eventAction === "DRAW_FOUR"){
+  if (eventAction === "WILD_CARD" || eventAction === "DRAW_FOUR") {
     alertIndicator.innerText = "COLOR CHANGE";
-    setTimeout(function() {
+    setTimeout(function () {
     }, 500);
-    setTimeout(function() {
+    setTimeout(function () {
       alertIndicator.style.display = "none";
     }, 1000);
-  } else if(eventAction === "REVERSE"){
+  } else if (eventAction === "REVERSE") {
     alertIndicator.innerText = "REVERSE";
-    setTimeout(function() {
+    setTimeout(function () {
     }, 500);
-    setTimeout(function() {
+    setTimeout(function () {
       alertIndicator.style.display = "none";
     }, 1000);
-  } else if(eventAction === "SKIP"){
+  } else if (eventAction === "SKIP") {
     alertIndicator.innerText = "TURN SKIPPED";
-    setTimeout(function() {
+    setTimeout(function () {
     }, 500);
-    setTimeout(function() {
+    setTimeout(function () {
       alertIndicator.style.display = "none";
     }, 1000);
   } else {
     alertIndicator.innerText = "";
   }
 
-  
+
 
 }
