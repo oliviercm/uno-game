@@ -747,32 +747,28 @@ class Game {
    */
   async accuseYouDidntSayUno(accuserUserId, accusedUserId) {
     await db.tx(async t => {
-      let accusedPlayerDrewCards = false;
       const accusedUser = await t.one(`SELECT called_uno_turns_ago, had_one_card_turns_ago FROM game_users WHERE game_id = $1 AND user_id = $2`, [
         this.id,
         accusedUserId,
       ]);
       const accusedUserCards = await this.getUserHandCards(accusedUserId, t);
       // Check conditions for successful accusal
-      if (
-        accusedUserCards.length === 1 &&
-        accusedUser.had_one_card_turns_ago < 2 &&
-        accusedUser.called_uno_turns_ago >= 2
-      ) {
-        // Draw 4 cards if successfully accused
-        for (let i = 0; i < 4; i++) {
-          await this.dealCard(accusedUserId, t);
-        }
-        accusedPlayerDrewCards = true;
+      if (accusedUserCards.length !== 1) {
+        throw new ApiClientError("The accused player must only have 1 card in their hand.");
       }
-      return {
-        accusedPlayerDrewCards,
-      };
-    }).then(results => {
+      if (!(accusedUser.had_one_card_turns_ago < 2)) {
+        throw new ApiClientError("You must call out the player BEFORE the player after them plays a card.");
+      }
+      if (!(accusedUser.called_uno_turns_ago >= 2)) {
+        throw new ApiClientError("The accused player said 'UNO'.");
+      }
+      // Draw 4 cards if successfully accused
+      for (let i = 0; i < 4; i++) {
+        await this.dealCard(accusedUserId, t);
+      }
+    }).then(() => {
       this.emitGameEvent({ type: "ACCUSE_YOU_DIDNT_SAY_UNO", accuser_user_id: accuserUserId, accused_user_id: accusedUserId });
-      if (results.accusedPlayerDrewCards) {
-        this.emitGameStateToConnectedUsers();
-      }
+      this.emitGameStateToConnectedUsers();
     });
   }
 
