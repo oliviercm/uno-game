@@ -419,6 +419,38 @@ body {
     transform: translateX(-105%);
 }
 
+#leftOpponentUnoSymbol,
+#rightOpponentUnoSymbol,
+#topOpponentUnoSymbol{
+    z-index: 1;
+    visibility: hidden;
+    position: absolute;
+    border-color: transparent;
+    backface-visibility: hidden;
+    text-align: center;
+    text-decoration: none;
+    font-family: Bowlby One SC;
+    padding: .4rem;
+    font-size: 4rem;
+    background-image: linear-gradient(to left, blue, green, yellow, orange, red);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    opacity: 0;
+    transition: opacity 0.2s ease-in;
+    filter: drop-shadow(2px 2px #333);
+}
+
+#leftOpponentUnoSymbol{
+    right: 10px;
+}
+#rightOpponentUnoSymbol{
+
+}
+#topOpponentUnoSymbol{
+    bottom: -5px;
+    right: 10px;
+}
+
 #leftOpponentName,
 #rightOpponentName,
 #topOpponentName,
@@ -463,16 +495,6 @@ body {
     right: -3%;
 }
 
-#myHand {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    z-index: 1;
-    height: 21vh;
-    max-width: 100%;
-}
-
 #myHandContainer {
     display: flex;
     position: fixed;
@@ -481,6 +503,15 @@ body {
     bottom: 0px;
     height: 21vh;
     width: 50vh;
+}
+
+#myHand {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+    height: 21vh;
 }
 
 
@@ -673,8 +704,6 @@ body {
 }
 
 .card img {
-    vertical-align: top;
-    width: 100%;
     opacity: 0;
 }
 
@@ -708,15 +737,6 @@ body {
     content: url('/assets/Invisible.png');
 }
 
-.rightOpponentCard{
-    filter: drop-shadow(10px 0 20px black);
-}
-.topOpponentCard{
-    filter: drop-shadow(0 -10px 20px black);
-}
-.leftOpponentCard {
-    filter: drop-shadow(-10px 0 20px black);
-}
 
 .leftOpponentCard {
     background-image: url('/assets/leftOpponent.png');
@@ -724,11 +744,17 @@ body {
     max-width: 563px;
     height: 12.93vh;
     width: 18.73vh;
+    filter: drop-shadow(-10px 0 20px black);
+    animation: slideLeft 0.5s forwards;
+    left: 100%;
 }
 
 .topOpponentCard {
     background-image: url('/assets/topOpponent.png');
     margin-top: 5px;
+    filter: drop-shadow(0 -10px 20px black);
+    animation: slideTop 0.5s forwards;
+    top: 100%;
 }
 
 .rightOpponentCard {
@@ -737,6 +763,21 @@ body {
     max-width: 563px;
     height: 12.93vh;
     width: 18.73vh;
+    filter: drop-shadow(10px 0 20px black);
+    animation: slideRight 0.5s forwards;
+    right: 100%;
+}
+
+@keyframes slideRight {
+    100% { right: 0; }
+}
+
+@keyframes slideTop {
+    100% { top: 0; }
+}
+
+@keyframes slideLeft {
+    100% { left: 0; }
 }
 
 .myCard {

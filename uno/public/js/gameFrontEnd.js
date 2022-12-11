@@ -6,13 +6,12 @@ const messageButton = document.querySelector('.input-button');
 const input = document.querySelector('.input-field-chat');
 const startGameButton = document.querySelector('.start-game');
 const leaveGameButton = document.querySelector('.leave-game');
-const wildcardButtonContainer = document.querySelector(
-  '.wildcardButtonContainer'
-);
+const wildcardButtonContainer = document.querySelector('.wildcardButtonContainer');
 const colorIndicator = document.querySelector('.colorContainer');
 const alertIndicator = document.querySelector('.alertContainer');
 const deckContainer = document.querySelector('.deckContainer');
 const unoButtonContainer = document.getElementsByClassName("unoButtonContainer").item(0);
+const youDidNotSayUnoButtonContainer = document.getElementsByClassName("youDidNotSayUnoButtonContainer").item(0);
 const socket = io({
   path: '/games/',
   query: {
@@ -109,6 +108,7 @@ fetch('/api/users/current').then((response) => {
 });
 
 let playerMap = new Map();
+let numDisplayedUserCards = 0;
 
 let discardPileDegree = [];
 for (let i = 0; i < 108; i++) {
@@ -117,9 +117,9 @@ for (let i = 0; i < 108; i++) {
 
 let visualVars = {
   //base values, updates as soon as the game starts
-  opponentContainerSize: 510,
-  userContainerSize: 800,
-  cardSize: 110
+  opponentContainerSize: (document.documentElement.clientHeight * .6),
+  userContainerSize: (document.documentElement.clientWidth * .5),
+  cardSize: (document.documentElement.clientHeight * .1293)
 }
 
 //TRUE === CLOCKWISE
@@ -158,7 +158,7 @@ socket.on("game_state", (gameState) => {
   }
 
 
-  // Display the current user's cards
+  // Display the current user's cards with animation if they are new cards
   const handElement = document.getElementById("myHand");
   while (handElement.firstChild) {
     handElement.removeChild(handElement.firstChild);
@@ -166,17 +166,22 @@ socket.on("game_state", (gameState) => {
   const currentUserCards = gameState?.cards.filter(card => {
     return card.user_id === currentUser.user_id;
   }).sort((a, b) => a.order - b.order);
+  let currentCard = 0;
   for (const card of currentUserCards) {
-    displayOwnCard(card);
+    currentCard++;
+    if (currentCard > numDisplayedUserCards) {
+      numDisplayedUserCards++;
+      displayOwnCard(card, true);
+    } else if (currentUserCards.length < numDisplayedUserCards) {
+      numDisplayedUserCards--;
+      displayOwnCard(card, false);
+    } else {
+      displayOwnCard(card, false);
+    }
+
   }
 
-  //If the game is started and not ended, update the visual vars
-  if (gameState?.started === true && gameState?.ended === false) {
-    visualVars.cardSize = document.getElementById("myHand").children[0].clientWidth;
-    visualVars.opponentContainerSize = document.getElementById("topOpponent").clientWidth;
-    visualVars.userContainerSize = document.getElementById("myHand").clientWidth;
-  }
-  document.querySelector(':root').style.setProperty("--myHandOverlap", calculateOverlap(handElement.childElementCount) + "px");
+  document.querySelector(':root').style.setProperty("--myHandOverlap", calculateOverlap(handElement.childElementCount, true) + "px");
 
   //display unoButton if user only has one card
   if (handElement.childElementCount === 1) {
@@ -208,13 +213,7 @@ socket.on("game_state", (gameState) => {
 
   for (let i = 0; i < opponents.length; i++) {
     const numOpponentCards = cardsInHands.filter(card => card.user_id === opponents[i].user_id).length;
-    displayOpponentCards(orderToDisplayOpponents[i], numOpponentCards);
-
-    //show you didn't say uno button if opponent only has 1 card
-    if(numOpponentCards === 1) {
-      displayYouDidntSayUnoButton(opponents[i].user_id);
-    }
-
+    displayOpponentCards(opponents[i].user_id, orderToDisplayOpponents[i], numOpponentCards);
     displayOpponentUsername(orderToDisplayOpponents[i], opponents[i].username);
 
     //add player locations to non-instanced map for other function use (game_event)
@@ -302,9 +301,10 @@ socket.on('game_event', (gameEvent) => {
     case "REVERSED_TURNS":
       break;
     case "CALLED_UNO":
-      // if (gameEvent.user_id !== currentUser.user_id) {
-      //   showOpponentCalledUno(user_id);
-      // }
+      if (gameEvent.user_id !== currentUser.user_id) {
+        displayOpponentCalledUno(gameEvent.user_id);
+        youDidNotSayUnoButtonContainer.style.visibility = "hidden";
+      }
       break;
     case "ACCUSE_YOU_DIDNT_SAY_UNO":
       if (gameEvent.accused_user_id === currentUser.user_id) {
@@ -333,7 +333,12 @@ function displayDeck(deckSize) {
   }
 }
 
-function displayOwnCard(card) {
+/**
+ * 
+ * @param {String} card 
+ * @param {Boolean} isNewCard 
+ */
+function displayOwnCard(card, isNewCard) {
   let elem = document.getElementById('myHand');
   let newCard = document.createElement('div');
   let sizeControllerImg = document.createElement('img');
@@ -343,6 +348,16 @@ function displayOwnCard(card) {
   newCard.setAttribute('id', `${card.card_id}`);
   newCard.style.backgroundImage =
     'url(' + CARD_FILE[card.color][card.value] + ')';
+
+  if (isNewCard) {
+    newCard.animate([
+      { transform: 'translateY(-100%) scale(1)' },
+      { transform: 'translateY(0%) scale(1)' }
+    ], {
+      duration: 500,
+      iterations: 1
+    })
+  }
   if (card.color === 'BLACK') {
     newCard.addEventListener(
       'click',
@@ -364,11 +379,12 @@ function displayOwnCard(card) {
   elem.appendChild(newCard);
 }
 
+
 /**
  * @param {String} opponentKey "topOpponent", "rightOpponent", "leftOpponent"
  * @param {Number} amount Amount of cards to display in hand
  */
-function displayOpponentCards(opponentKey, amount) {
+function displayOpponentCards(user_id, opponentKey, amount) {
 
   const opponentHandElement = document.getElementById(opponentKey);
   opponentHandElement.style.visibility = "visible";
@@ -387,18 +403,34 @@ function displayOpponentCards(opponentKey, amount) {
     for (let i = 0; i < cardsAlreadyInOpponentsHand - amount; i++) {
       opponentHandElement.removeChild(opponentHandElement.firstChild);
     }
+
+    //lost cards, if cards is now 1 check for uno
+    if (opponentHandElement.childElementCount === 1) {
+      console.log("Showing Button");
+      displayYouDidntSayUnoButton(user_id);
+    }
   }
 
-  document.querySelector(':root').style.setProperty(`--${opponentKey}Overlap`, calculateOverlap(opponentHandElement.children.length) + "px");
+  document.querySelector(':root').style.setProperty(`--${opponentKey}Overlap`, calculateOverlap(opponentHandElement.children.length, false) + "px");
 }
 
 /**
  * @param {int} numCards number of cards in a hand
  * @returns calculated overlap per card so that they fit inside a container
  */
-function calculateOverlap(numCards) {
-  let fullOverlapValue = (visualVars.cardSize * numCards) - visualVars.opponentContainerSize;
+function calculateOverlap(numCards, isOwnHand) {
+  let containerSize = visualVars.opponentContainerSize;
+  if(isOwnHand) {
+    containerSize = visualVars.userContainerSize
+  }
+  let fullOverlapValue = (visualVars.cardSize * numCards) - containerSize;
   let overlapPerCard = ((fullOverlapValue / numCards) * -1) - (30 - numCards);
+
+  console.log("ContainerSize: " + visualVars.opponentContainerSize);
+  console.log("CardSize: " + visualVars.cardSize);
+  console.log("NumCards: " + numCards);
+  console.log("FullOverlap: " + fullOverlapValue);
+  console.log("OverlapPerCard: " + overlapPerCard);
 
   //at least overlap a little bit
   if (overlapPerCard > -15) {
@@ -533,7 +565,7 @@ function displayUnoButton() {
   unoButtonContainer.style.visibility = "visible";
   setTimeout(() => {
     unoButtonContainer.style.visibility = "hidden";
-  }, "10000")
+  }, "5000")
 }
 
 /**
@@ -564,23 +596,23 @@ function postSaidUno() {
  * @param {String} user_id Opponent User ID that corresponds to the displayed You Didn't Say Uno! button
  */
 function displayYouDidntSayUnoButton(user_id) {
-  let buttonContainer = document.getElementsByClassName("youDidNotSayUnoButtonContainer").item(0);
-  buttonContainer.style.visibility = "visible";
+  youDidNotSayUnoButtonContainer.style.visibility = "visible";
+  youDidNotSayUnoButtonContainer.style.opacity = "1";
   let youDidntSayUno = document.getElementById("youDidNotSayUnoButton");
   youDidntSayUno.removeEventListener("click", postYouDidntSayUno, false);
-  youDidntSayUno.addEventListener("click", function(){
-    postYouDidntSayUno(user_id, buttonContainer);
+  youDidntSayUno.addEventListener("click", function () {
+    postYouDidntSayUno(user_id);
   }, false);
   setTimeout(() => {
-    buttonContainer.style.visibility = "hidden";
-  }, "20000")
+    youDidNotSayUnoButtonContainer.style.visibility = "hidden";
+  }, "5000")
 }
 /**
  * 
  * @param {String} user_id Opponent user ID that will be accused of not saying Uno
  * @param {String} buttonContainer Parent element that will have visibility set to "hidden"
  */
-function postYouDidntSayUno(user_id, buttonContainer) {
+function postYouDidntSayUno(user_id) {
   console.log(user_id);
   const query = `/api/games/${gameId}/accuse-you-didnt-say-uno`;
   let request = {
@@ -595,17 +627,45 @@ function postYouDidntSayUno(user_id, buttonContainer) {
   };
   fetch(query, request);
   //hides unoButton
-  buttonContainer.style.opacity = "0";
+  youDidNotSayUnoButtonContainer.style.opacity = "0";
   setTimeout(() => {
-    buttonContainer.style.visibility = "hidden"
+    youDidNotSayUnoButtonContainer.style.visibility = "hidden"
   }, "1000")
 }
 
 
-function animateDealtCard(user_id) {
-  const player = document.getElementsByClassName(playerMap.get(user_id));
-  //choose random card
-  let cardnumber = Math.floor(Math.random() * player.children.length) * (Math.round(Math.random()));
+
+/**
+ * 
+ * @param {String} user_id which corresponds to the opponent that said Uno!
+ */
+function displayOpponentCalledUno(user_id) {
+  let playerPosition = playerMap.get(user_id);
+  let opponentUnoDiv = document.getElementById(playerPosition + 'UnoSymbol');
+  let transformMap = {
+    leftOpponent: "translateX(50%) translateY(-50%)",
+    topOpponent: "translateX(50%) translateY(50%)",
+    rightOpponent: "translateX(-50%) translateY(-50%)"
+  }
+  opponentUnoDiv.style.visibility = "visible";
+  opponentUnoDiv.style.opacity = "1";
+  setTimeout(() => {
+    opponentUnoDiv.animate([
+      { transform: 'translateX(0) translateY(0) scale(1)' },
+      { transform: transformMap[playerPosition] + ' scale(1.5)' }
+    ], {
+      duration: 500,
+      iterations: 1
+    })
+    opponentUnoDiv.style.transform = "translateX(50%) translateY(50%) scale(1.5)"
+  }, "200")
+  setTimeout(() => {
+    opponentUnoDiv.style.opacity = "0"
+  }, "1700")
+  setTimeout(() => {
+    opponentUnoDiv.style.visibility = "hidden"
+  }, "2000")
+
 }
 
 let colorMap = {
@@ -621,13 +681,13 @@ function animatePlayedCard(user_id, card_color, card_value) {
       animateReverse(card_color);
       break;
     case "SKIP":
-      animateSkip(card_color);
+      animateSpecialCard(card_color, "skip");
       break;
     case "DRAW_TWO":
-      animateDrawTwo(card_color);
+      animateSpecialCard(card_color, "plusTwo");
       break;
     case "DRAW_FOUR":
-      animateDrawFour(card_color);
+      animateSpecialCard(card_color, "plusFour");
       break;
   }
 }
@@ -678,69 +738,28 @@ function animateReverse(card_color) {
 }
 
 /**
- * Displays and animates the skip symbol
+ * 
+ * @param {String} card_color the color of the card being played
+ * @param {String} card_type the type of the card being played (skip, plusTwo, plusFour)
  */
-function animateSkip(card_color) {
-  let skip = document.getElementById("skip");
-  let skipContainer = document.getElementById("skipContainer");
-  skip.style.filter = colorMap[card_color];
-  skip.style.visibility = "visible"
-  skipContainer.style.animationName = "bounce";
-  skipContainer.style.zIndex = "4";
+function animateSpecialCard(card_color, card_type){
+  let symbol = document.getElementById(card_type);
+  let container = document.getElementById(card_type + "Container");
+  symbol.style.filter = colorMap[card_color];
+  symbol.style.visibility = "visible"
+  container.style.animationName = "bounce";
+  container.style.zIndex = "4";
   setTimeout(() => {
-    skip.style.opacity = 0;
-    skipContainer.style.animationName = "";
+    symbol.style.opacity = 0;
+    container.style.animationName = "";
   }, "1000");
   setTimeout(() => {
-    skip.style.visibility = "hidden"
-    skipContainer.style.zIndex = "-4";
-    skip.style.opacity = 1;
+    symbol.style.visibility = "hidden"
+    container.style.zIndex = "-4";
+    symbol.style.opacity = 1;
   }, "1950");
 }
 
-/**
- * Displays and animates the draw four symbol
- */
-function animateDrawFour(card_color) {
-  let drawFour = document.getElementById("plusFour");
-  let drawFourContainer = document.getElementById("plusFourContainer");
-  drawFour.style.filter = colorMap[card_color];
-  drawFour.style.visibility = "visible"
-  drawFourContainer.style.animationName = "bounce";
-  drawFourContainer.style.zIndex = "4";
-  setTimeout(() => {
-    drawFour.style.opacity = 0;
-    drawFourContainer.style.animationName = "";
-  }, "1000");
-  setTimeout(() => {
-    drawFour.style.visibility = "hidden"
-    drawFourContainer.style.zIndex = "-4";
-    drawFour.style.opacity = 1;
-  }, "1950"); drawFour
-
-}
-
-/**
- * Displays and animates the draw two symbol
- */
-function animateDrawTwo(card_color) {
-  let drawTwo = document.getElementById("plusTwo");
-  let drawTwoContainer = document.getElementById("plusTwoContainer");
-  drawTwo.style.filter = colorMap[card_color];
-  drawTwo.style.visibility = "visible"
-  drawTwoContainer.style.animationName = "bounce";
-  drawTwoContainer.style.zIndex = "4";
-  setTimeout(() => {
-    drawTwo.style.opacity = 0;
-    drawTwoContainer.style.animationName = "";
-  }, "1000");
-  setTimeout(() => {
-    drawTwo.style.visibility = "hidden"
-    drawTwoContainer.style.zIndex = "-4";
-    drawTwo.style.opacity = 1;
-  }, "1950");
-
-}
 
 //Button on end game screen return to lobby
 const returnLobby = document.querySelectorAll('.lobby-button');
