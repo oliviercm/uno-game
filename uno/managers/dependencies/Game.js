@@ -235,19 +235,21 @@ class Game {
       [newCardOrders[i], newCardOrders[rand]] = [newCardOrders[rand], newCardOrders[i]];
     }
     // Update cards in DB
-    await (transaction ?? db).none(`
-        UPDATE game_cards
-          SET "order" = temp."order"
-          FROM (VALUES $2:raw) AS temp(card_id, "order")
-          WHERE game_id = $1 AND game_cards.card_id = temp.card_id`, [
-      this.id,
-      require("pg-promise")().helpers.values(newCardOrders.map((newCardOrder, i) => {
-        return {
-          card_id: deckCards[i].card_id,
-          order: newCardOrder,
-        };
-      }), ["card_id", "order"]),
-    ]);
+    if (newCardOrders.length > 0) {
+      await (transaction ?? db).none(`
+          UPDATE game_cards
+            SET "order" = temp."order"
+            FROM (VALUES $2:raw) AS temp(card_id, "order")
+            WHERE game_id = $1 AND game_cards.card_id = temp.card_id`, [
+        this.id,
+        require("pg-promise")().helpers.values(newCardOrders.map((newCardOrder, i) => {
+          return {
+            card_id: deckCards[i].card_id,
+            order: newCardOrder,
+          };
+        }), ["card_id", "order"]),
+      ]);
+    }
     this.emitGameEvent({ type: "DECK_SHUFFLED" });
   }
 
@@ -257,7 +259,7 @@ class Game {
       throw new ApiClientError("Game has not started or is ended.");
     }
     // If deck is empty
-    if (await (transaction ?? db).one(`SELECT COUNT(*) FROM game_cards WHERE game_id = $1 AND location = 'DECK'`, [this.id]) === 0) {
+    if (parseInt((await (transaction ?? db).one(`SELECT COUNT(*) FROM game_cards WHERE game_id = $1 AND location = 'DECK'`, [this.id])).count) === 0) {
       // Keep top discard card in discard pile
       const topDiscardCard = await this.getTopDiscardCard(transaction);
       await (transaction ?? db).none(`UPDATE game_cards SET "order" = 0 WHERE game_id = $1 AND card_id = $2`, [this.id, topDiscardCard.card_id]);
