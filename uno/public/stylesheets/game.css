@@ -230,24 +230,61 @@ body {
 
 .unoButtonContainer {
     visibility: hidden;
+    opacity: 1;
     position: absolute;
     cursor: pointer;
     border-radius: 100px;
     background-color: rgba(10, 10, 10, .7);
-    transition: 200ms ease-in;
+    transition: 200ms ease-in, opacity 200ms ease-in-out;
     top: 65%;
     right: 46%;
     display: flex;
     justify-content: center;
     align-content: center;
     flex-direction: column;
+    box-shadow: 0px 4px 4px 2px rgba(0, 0, 0, 0.60);
 }
 
 .unoButtonContainer:hover {
     transform: rotate(-10deg) scale(0.9);
+    filter: brightness(70%);
 }
 
-.unoButton {
+#unoButton {
+    z-index: 5;
+    display: block;
+    cursor: pointer;
+    border-color: transparent;
+    backface-visibility: hidden;
+    text-align: center;
+    text-decoration: none;
+    font-family: Lobster;
+    padding: .4rem;
+    font-size: 4rem;
+    background-image: linear-gradient(to left, blue, green, yellow, orange, red);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(2px 2px #333);
+}
+
+.youDidNotSayUnoButtonContainer {
+    visibility: hidden;
+    position: absolute;
+    cursor: pointer;
+    border-radius: 100px;
+    background-image: linear-gradient(to left, rgba(255, 255, 255, 0.7), rgba(128, 128, 128, 0.7));
+    box-shadow: 4px 4px 12px 2px rgba(0, 0, 0, 0.60);
+    transition: 200ms ease-in;
+    top: 65%;
+    left: 40%;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    flex-direction: column;
+
+}
+
+#youDidNotSayUnoButton {
     z-index: 1;
     display: block;
     cursor: pointer;
@@ -256,17 +293,42 @@ body {
     text-align: center;
     text-decoration: none;
     font-family: Lobster;
-    font-size: 4rem;
-    top: 65%;
-    right: 46%;
-    background-image: linear-gradient(to left, blue, green, yellow, orange, red);
+    font-size: 3rem;
+    padding-left: .5rem;
+    padding-right: .5rem;
+    background-image: linear-gradient(to left, black, white);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     filter: drop-shadow(2px 2px #333);
 }
 
-.unoButton:hover {
+.youDidNotSayUnoButtonContainer:hover {
+    animation: shake 0.82s cubic-bezier(.36, .07, .19, .97) both;
     filter: brightness(70%);
+}
+
+@keyframes shake {
+
+    10%,
+    90% {
+        transform: translate3d(-1px, 0, 0);
+    }
+
+    20%,
+    80% {
+        transform: translate3d(2px, 0, 0);
+    }
+
+    30%,
+    50%,
+    70% {
+        transform: translate3d(-4px, 0, 0);
+    }
+
+    40%,
+    60% {
+        transform: translate3d(4px, 0, 0);
+    }
 }
 
 /* FOR CHOSEN WILDCARD BUTTON TESTING */
@@ -306,72 +368,6 @@ body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     filter: drop-shadow(2px 2px #333);
-}
-
-.unoButton:hover {
-    filter: brightness(70%);
-}
-
-.youDidNotSayUnoButtonContainer {
-    visibility: hidden;
-    position: absolute;
-    cursor: pointer;
-    border-radius: 100px;
-    background-image: linear-gradient(to left, rgba(255, 255, 255, 0.7), rgba(128, 128, 128, 0.7));
-    box-shadow: 4px 4px 12px 2px rgba(0, 0, 0, 0.60);
-    transition: 200ms ease-in;
-    top: 65%;
-    left: 40%;
-    display: flex;
-    justify-content: center;
-    align-content: center;
-    flex-direction: column;
-
-}
-
-.youDidNotSayUnoButton {
-    z-index: 1;
-    display: block;
-    cursor: pointer;
-    border-color: transparent;
-    backface-visibility: hidden;
-    text-align: center;
-    text-decoration: none;
-    font-family: Lobster;
-    font-size: 3rem;
-    background-image: linear-gradient(to left, black, white);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(2px 2px #333);
-}
-
-.youDidNotSayUnoButtonContainer:hover {
-    animation: shake 0.82s cubic-bezier(.36, .07, .19, .97) both;
-    filter: brightness(70%);
-}
-
-@keyframes shake {
-
-    10%,
-    90% {
-        transform: translate3d(-1px, 0, 0);
-    }
-
-    20%,
-    80% {
-        transform: translate3d(2px, 0, 0);
-    }
-
-    30%,
-    50%,
-    70% {
-        transform: translate3d(-4px, 0, 0);
-    }
-
-    40%,
-    60% {
-        transform: translate3d(4px, 0, 0);
-    }
 }
 
 .opponentName {
@@ -423,6 +419,38 @@ body {
     transform: translateX(-105%);
 }
 
+#leftOpponentUnoSymbol,
+#rightOpponentUnoSymbol,
+#topOpponentUnoSymbol{
+    z-index: 1;
+    visibility: hidden;
+    position: absolute;
+    border-color: transparent;
+    backface-visibility: hidden;
+    text-align: center;
+    text-decoration: none;
+    font-family: Bowlby One SC;
+    padding: .4rem;
+    font-size: 4rem;
+    background-image: linear-gradient(to left, blue, green, yellow, orange, red);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    opacity: 0;
+    transition: opacity 0.2s ease-in;
+    filter: drop-shadow(2px 2px #333);
+}
+
+#leftOpponentUnoSymbol{
+    right: 10px;
+}
+#rightOpponentUnoSymbol{
+
+}
+#topOpponentUnoSymbol{
+    bottom: -5px;
+    right: 10px;
+}
+
 #leftOpponentName,
 #rightOpponentName,
 #topOpponentName,
@@ -467,16 +495,6 @@ body {
     right: -3%;
 }
 
-#myHand {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    z-index: 1;
-    height: 21vh;
-    max-width: 100%;
-}
-
 #myHandContainer {
     display: flex;
     position: fixed;
@@ -485,6 +503,15 @@ body {
     bottom: 0px;
     height: 21vh;
     width: 50vh;
+}
+
+#myHand {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+    height: 21vh;
 }
 
 
@@ -677,8 +704,6 @@ body {
 }
 
 .card img {
-    vertical-align: top;
-    width: 100%;
     opacity: 0;
 }
 
@@ -712,15 +737,6 @@ body {
     content: url('/assets/Invisible.png');
 }
 
-.rightOpponentCard{
-    filter: drop-shadow(10px 0 20px black);
-}
-.topOpponentCard{
-    filter: drop-shadow(0 -10px 20px black);
-}
-.leftOpponentCard {
-    filter: drop-shadow(-10px 0 20px black);
-}
 
 .leftOpponentCard {
     background-image: url('/assets/leftOpponent.png');
@@ -728,11 +744,17 @@ body {
     max-width: 563px;
     height: 12.93vh;
     width: 18.73vh;
+    filter: drop-shadow(-10px 0 20px black);
+    animation: slideLeft 0.5s forwards;
+    left: 100%;
 }
 
 .topOpponentCard {
     background-image: url('/assets/topOpponent.png');
     margin-top: 5px;
+    filter: drop-shadow(0 -10px 20px black);
+    animation: slideTop 0.5s forwards;
+    top: 100%;
 }
 
 .rightOpponentCard {
@@ -741,6 +763,21 @@ body {
     max-width: 563px;
     height: 12.93vh;
     width: 18.73vh;
+    filter: drop-shadow(10px 0 20px black);
+    animation: slideRight 0.5s forwards;
+    right: 100%;
+}
+
+@keyframes slideRight {
+    100% { right: 0; }
+}
+
+@keyframes slideTop {
+    100% { top: 0; }
+}
+
+@keyframes slideLeft {
+    100% { left: 0; }
 }
 
 .myCard {

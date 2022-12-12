@@ -16,22 +16,25 @@ script(src='/socket.io/socket.io.js')
         button.start-game START GAME
         .deckContainer
     .unoButtonContainer
-        button.unoButton(type="button") Uno!
+        button#unoButton(type="button") Uno!
     .youDidNotSayUnoButtonContainer
-        button.youDidNotSayUnoButton(type="button") You didn't say Uno!
+        button#youDidNotSayUnoButton(type="button") You didn't say Uno!
     #myHandBorder.hand
     #myHandContainer
         #myHand.hand
     #leftOpponentBorder
     .leftOpponentContainer
+        #leftOpponentUnoSymbol Uno!
         #leftOpponentName.opponentName
         #leftOpponent
     #topOpponentBorder
     .topOpponentContainer
+        #topOpponentUnoSymbol Uno!
         #topOpponentName.opponentName
         #topOpponent
     #rightOpponentBorder
     .rightOpponentContainer
+        #rightOpponentUnoSymbol Uno!
         #rightOpponentName.opponentName
         #rightOpponent
     .wildcardButtonContainer

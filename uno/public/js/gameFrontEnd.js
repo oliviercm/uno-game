@@ -6,12 +6,12 @@ const messageButton = document.querySelector('.input-button');
 const input = document.querySelector('.input-field-chat');
 const startGameButton = document.querySelector('.start-game');
 const leaveGameButton = document.querySelector('.leave-game');
-const wildcardButtonContainer = document.querySelector(
-  '.wildcardButtonContainer'
-);
+const wildcardButtonContainer = document.querySelector('.wildcardButtonContainer');
 const colorIndicator = document.querySelector('.colorContainer');
 const alertIndicator = document.querySelector('.alertContainer');
 const deckContainer = document.querySelector('.deckContainer');
+const unoButtonContainer = document.getElementsByClassName("unoButtonContainer").item(0);
+const youDidNotSayUnoButtonContainer = document.getElementsByClassName("youDidNotSayUnoButtonContainer").item(0);
 const socket = io({
   path: '/games/',
   query: {
@@ -95,11 +95,6 @@ leaveGameButton.addEventListener('click', leaveGame);
 
 // GAME STATE
 
-let discardPileDegree = [];
-for (let i = 0; i < 108; i++) {
-  discardPileDegree.push(Math.floor(Math.random() * 20) * (Math.round(Math.random()) ? 1 : -1));
-}
-
 let currentUser;
 fetch('/api/users/current').then((response) => {
   if (response.status == 200) {
@@ -111,18 +106,32 @@ fetch('/api/users/current').then((response) => {
     alert('Not logged in');
   }
 });
+
 let playerMap = new Map();
+let opponentCalledUno = {
+  leftOpponent: false,
+  topOpponent: false,
+  rightOpponent: false
+}
+let numDisplayedUserCards = 0;
+
+let discardPileDegree = [];
+for (let i = 0; i < 108; i++) {
+  discardPileDegree.push(Math.floor(Math.random() * 20) * (Math.round(Math.random()) ? 1 : -1));
+}
 
 let visualVars = {
   //base values, updates as soon as the game starts
-  opponentContainerSize: 510,
-  userContainerSize: 800,
-  cardSize: 110
+  opponentContainerSize: (document.documentElement.clientHeight * .6),
+  userContainerSize: (document.documentElement.clientWidth * .5),
+  cardSize: (document.documentElement.clientHeight * .1293)
 }
 
 //TRUE === CLOCKWISE
 //FALSE === COUNTERCLOCKWISE
 let directionOfPlay = true;
+
+document.getElementById("unoButton").addEventListener('click', postSaidUno);
 
 socket.on("game_state", (gameState) => {
   console.log(gameState);
@@ -154,26 +163,36 @@ socket.on("game_state", (gameState) => {
   }
 
 
-  // Display the current user's cards
+  // Display the current user's cards with animation if they are new cards
   const handElement = document.getElementById("myHand");
   while (handElement.firstChild) {
     handElement.removeChild(handElement.firstChild);
   }
   const currentUserCards = gameState?.cards.filter(card => {
-      return card.user_id === currentUser.user_id;
+    return card.user_id === currentUser.user_id;
   }).sort((a, b) => a.order - b.order);
+  let currentCard = 0;
   for (const card of currentUserCards) {
-    displayOwnCard(card);
+    currentCard++;
+    if (currentCard > numDisplayedUserCards) {
+      numDisplayedUserCards++;
+      displayOwnCard(card, true);
+    } else if (currentUserCards.length < numDisplayedUserCards) {
+      numDisplayedUserCards--;
+      displayOwnCard(card, false);
+    } else {
+      displayOwnCard(card, false);
+    }
+
   }
 
-  //If the game is started, update the visual vars
-  if (gameState?.started === true && gameState?.ended === false) {
-    visualVars.cardSize = document.getElementById("myHand").children[0].clientWidth;
-    visualVars.opponentContainerSize = document.getElementById("topOpponent").clientWidth;
-    visualVars.userContainerSize = document.getElementById("myHand").clientWidth;
-  }
-  document.querySelector(':root').style.setProperty("--myHandOverlap", calculateOverlap(handElement.children.length) + "px");
+  document.querySelector(':root').style.setProperty("--myHandOverlap", calculateOverlap(handElement.childElementCount, true) + "px");
 
+  //display unoButton if user has two cards and it is their turn
+  if (handElement.childElementCount === 2 && currentUserInGameState.play_order === 0) {
+    console.log("Displaying button");
+    displayUnoButton();
+  }
 
   // Display turn border for self
   if (currentUserInGameState && currentUserInGameState.play_order === 0) {
@@ -200,7 +219,7 @@ socket.on("game_state", (gameState) => {
 
   for (let i = 0; i < opponents.length; i++) {
     const numOpponentCards = cardsInHands.filter(card => card.user_id === opponents[i].user_id).length;
-    displayOpponentCards(orderToDisplayOpponents[i], numOpponentCards);
+    displayOpponentCards(opponents[i].user_id, orderToDisplayOpponents[i], numOpponentCards);
     displayOpponentUsername(orderToDisplayOpponents[i], opponents[i].username);
 
     //add player locations to non-instanced map for other function use (game_event)
@@ -287,6 +306,21 @@ socket.on('game_event', (gameEvent) => {
       break;
     case "REVERSED_TURNS":
       break;
+    case "CALLED_UNO":
+      if (gameEvent.user_id !== currentUser.user_id) {
+        displayOpponentCalledUno(gameEvent.user_id);
+        opponentCalledUno[playerMap.get(gameEvent.user_id)] = true;
+        youDidNotSayUnoButtonContainer.style.visibility = "hidden";
+      }
+      break;
+    case "ACCUSE_YOU_DIDNT_SAY_UNO":
+      if (gameEvent.accused_user_id === currentUser.user_id) {
+        unoButtonContainer.style.visibility = "hidden";
+        //showOwnFailedUno();
+      } else {
+        //showOpponentFailedUno();
+      }
+      break;
     default:
       console.log(`Unrecognized game event: ${gameEvent.type}`);
       break;
@@ -306,7 +340,12 @@ function displayDeck(deckSize) {
   }
 }
 
-function displayOwnCard(card) {
+/**
+ * 
+ * @param {String} card 
+ * @param {Boolean} isNewCard 
+ */
+function displayOwnCard(card, isNewCard) {
   let elem = document.getElementById('myHand');
   let newCard = document.createElement('div');
   let sizeControllerImg = document.createElement('img');
@@ -316,6 +355,17 @@ function displayOwnCard(card) {
   newCard.setAttribute('id', `${card.card_id}`);
   newCard.style.backgroundImage =
     'url(' + CARD_FILE[card.color][card.value] + ')';
+
+  if (isNewCard) {
+    unoButtonContainer.style.visibility = "hidden";
+    newCard.animate([
+      { transform: 'translateY(-100%) scale(1)' },
+      { transform: 'translateY(0%) scale(1)' }
+    ], {
+      duration: 500,
+      iterations: 1
+    })
+  }
   if (card.color === 'BLACK') {
     newCard.addEventListener(
       'click',
@@ -337,17 +387,19 @@ function displayOwnCard(card) {
   elem.appendChild(newCard);
 }
 
+
 /**
  * @param {String} opponentKey "topOpponent", "rightOpponent", "leftOpponent"
  * @param {Number} amount Amount of cards to display in hand
  */
-function displayOpponentCards(opponentKey, amount) {
+function displayOpponentCards(user_id, opponentKey, amount) {
 
   const opponentHandElement = document.getElementById(opponentKey);
   opponentHandElement.style.visibility = "visible";
   const cardsAlreadyInOpponentsHand = opponentHandElement.childElementCount;
   // Based on how many cards are already displayed and how many should be displayed, add or remove cards as necessary
   if (cardsAlreadyInOpponentsHand < amount) {
+    opponentCalledUno[opponentKey] = false;
     for (let i = 0; i < amount - cardsAlreadyInOpponentsHand; i++) {
       const newCard = document.createElement('div');
       const sizeControllerImg = document.createElement('img');
@@ -360,18 +412,28 @@ function displayOpponentCards(opponentKey, amount) {
     for (let i = 0; i < cardsAlreadyInOpponentsHand - amount; i++) {
       opponentHandElement.removeChild(opponentHandElement.firstChild);
     }
+
+    //lost cards, if cards is now 1 check for uno
+    if (opponentHandElement.childElementCount === 1 && !opponentCalledUno[opponentKey]) {
+      displayYouDidntSayUnoButton(user_id);
+    }
   }
-  document.querySelector(':root').style.setProperty(`--${opponentKey}Overlap`, calculateOverlap(opponentHandElement.children.length) + "px");
+
+  document.querySelector(':root').style.setProperty(`--${opponentKey}Overlap`, calculateOverlap(opponentHandElement.children.length, false) + "px");
 }
 
 /**
- * 
  * @param {int} numCards number of cards in a hand
  * @returns calculated overlap per card so that they fit inside a container
  */
-function calculateOverlap(numCards) {
-  let fullOverlapValue = (visualVars.cardSize * numCards) - visualVars.opponentContainerSize;
+function calculateOverlap(numCards, isOwnHand) {
+  let containerSize = visualVars.opponentContainerSize;
+  if(isOwnHand) {
+    containerSize = visualVars.userContainerSize
+  }
+  let fullOverlapValue = (visualVars.cardSize * numCards) - containerSize;
   let overlapPerCard = ((fullOverlapValue / numCards) * -1) - (30 - numCards);
+  //at least overlap a little bit
   if (overlapPerCard > -15) {
     return -15;
   }
@@ -476,7 +538,7 @@ function displayDiscardPile(discardPile) {
     { transform: 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + ')) scale(1.5)' },
     { transform: 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + ')) scale(1)' }
   ], {
-      duration: 300,
+    duration: 300,
     iterations: 1
   })
   lastCard.style.transform = 'rotate(calc(' + discardPileDegree[degreeTracker] + 'deg' + '))'
@@ -497,11 +559,111 @@ function displayTurnBorder(turnHandKey) {
   root.style.setProperty(`--${turnHandKey}Border`, "visible");
 }
 
+/**
+ * Displays the Uno Button and becomes clickable with function
+ */
+function displayUnoButton() {
+  unoButtonContainer.style.visibility = "visible";
+  unoButtonContainer.style.opacity = "1";
+}
 
-function animateDealtCard(user_id) {
-  const player = document.getElementsByClassName(playerMap.get(user_id));
-  //choose random card
-  let cardnumber = Math.floor(Math.random() * player.children.length) * (Math.round(Math.random()));
+/**
+ * Sends post request for saying uno (upon user clicking the Uno! button)
+ */
+function postSaidUno() {
+  const query = `/api/games/${gameId}/say-uno`;
+  let request = {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    }
+  };
+  fetch(query, request);
+
+  console.log(unoButtonContainer);
+  unoButtonContainer.style.opacity = "0";
+  setTimeout(() => {
+    unoButtonContainer.style.visibility = "hidden"
+  }, "1000")
+
+}
+
+/**
+ * 
+ * @param {String} user_id Opponent User ID that corresponds to the displayed You Didn't Say Uno! button
+ */
+function displayYouDidntSayUnoButton(user_id) {
+  youDidNotSayUnoButtonContainer.style.visibility = "visible";
+  youDidNotSayUnoButtonContainer.style.opacity = "1";
+  let youDidntSayUno = document.getElementById("youDidNotSayUnoButton");
+  youDidntSayUno.removeEventListener("click", postYouDidntSayUno, false);
+  youDidntSayUno.addEventListener("click", function () {
+    postYouDidntSayUno(user_id);
+  }, false);
+  setTimeout(() => {
+    youDidNotSayUnoButtonContainer.style.visibility = "hidden";
+  }, "5000")
+}
+/**
+ * 
+ * @param {String} user_id Opponent user ID that will be accused of not saying Uno
+ * @param {String} buttonContainer Parent element that will have visibility set to "hidden"
+ */
+function postYouDidntSayUno(user_id) {
+  console.log(user_id);
+  const query = `/api/games/${gameId}/accuse-you-didnt-say-uno`;
+  let request = {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      accused_user_id: user_id,
+    }),
+  };
+  fetch(query, request);
+  //hides unoButton
+  youDidNotSayUnoButtonContainer.style.opacity = "0";
+  setTimeout(() => {
+    youDidNotSayUnoButtonContainer.style.visibility = "hidden"
+  }, "1000")
+}
+
+
+
+/**
+ * 
+ * @param {String} user_id which corresponds to the opponent that said Uno!
+ */
+function displayOpponentCalledUno(user_id) {
+  let playerPosition = playerMap.get(user_id);
+  let opponentUnoDiv = document.getElementById(playerPosition + 'UnoSymbol');
+  let transformMap = {
+    leftOpponent: "translateX(50%) translateY(-50%)",
+    topOpponent: "translateX(50%) translateY(50%)",
+    rightOpponent: "translateX(-50%) translateY(-50%)"
+  }
+  opponentUnoDiv.style.visibility = "visible";
+  opponentUnoDiv.style.opacity = "1";
+  setTimeout(() => {
+    opponentUnoDiv.animate([
+      { transform: 'translateX(0) translateY(0) scale(1)' },
+      { transform: transformMap[playerPosition] + ' scale(1.5)' }
+    ], {
+      duration: 500,
+      iterations: 1
+    })
+    opponentUnoDiv.style.transform = "translateX(50%) translateY(50%) scale(1.5)"
+  }, "200")
+  setTimeout(() => {
+    opponentUnoDiv.style.opacity = "0"
+  }, "1700")
+  setTimeout(() => {
+    opponentUnoDiv.style.visibility = "hidden"
+  }, "2000")
+
 }
 
 let colorMap = {
@@ -517,13 +679,13 @@ function animatePlayedCard(user_id, card_color, card_value) {
       animateReverse(card_color);
       break;
     case "SKIP":
-      animateSkip(card_color);
+      animateSpecialCard(card_color, "skip");
       break;
     case "DRAW_TWO":
-      animateDrawTwo(card_color);
+      animateSpecialCard(card_color, "plusTwo");
       break;
     case "DRAW_FOUR":
-      animateDrawFour(card_color);
+      animateSpecialCard(card_color, "plusFour");
       break;
   }
 }
@@ -535,7 +697,7 @@ function animateReverse(card_color) {
   let reverse = document.getElementById("reverse");
   let reverseContainer = document.getElementById("reverseContainer");
   reverse.style.visibility = "visible"
-  reverse.style.filter= colorMap[card_color];
+  reverse.style.filter = colorMap[card_color];
   reverseContainer.style.animationName = "bounce";
   reverseContainer.style.zIndex = "4";
 
@@ -574,69 +736,28 @@ function animateReverse(card_color) {
 }
 
 /**
- * Displays and animates the skip symbol
+ * 
+ * @param {String} card_color the color of the card being played
+ * @param {String} card_type the type of the card being played (skip, plusTwo, plusFour)
  */
-function animateSkip(card_color) {
-  let skip = document.getElementById("skip");
-  let skipContainer = document.getElementById("skipContainer");
-  skip.style.filter= colorMap[card_color];
-  skip.style.visibility = "visible"
-  skipContainer.style.animationName = "bounce";
-  skipContainer.style.zIndex = "4";
+function animateSpecialCard(card_color, card_type){
+  let symbol = document.getElementById(card_type);
+  let container = document.getElementById(card_type + "Container");
+  symbol.style.filter = colorMap[card_color];
+  symbol.style.visibility = "visible"
+  container.style.animationName = "bounce";
+  container.style.zIndex = "4";
   setTimeout(() => {
-    skip.style.opacity = 0;
-    skipContainer.style.animationName = "";
+    symbol.style.opacity = 0;
+    container.style.animationName = "";
   }, "1000");
   setTimeout(() => {
-    skip.style.visibility = "hidden"
-    skipContainer.style.zIndex = "-4";
-    skip.style.opacity = 1;
+    symbol.style.visibility = "hidden"
+    container.style.zIndex = "-4";
+    symbol.style.opacity = 1;
   }, "1950");
 }
 
-/**
- * Displays and animates the draw four symbol
- */
-function animateDrawFour(card_color) {
-  let drawFour = document.getElementById("plusFour");
-  let drawFourContainer = document.getElementById("plusFourContainer");
-  drawFour.style.filter= colorMap[card_color];
-  drawFour.style.visibility = "visible"
-  drawFourContainer.style.animationName = "bounce";
-  drawFourContainer.style.zIndex = "4";
-  setTimeout(() => {
-    drawFour.style.opacity = 0;
-    drawFourContainer.style.animationName = "";
-  }, "1000");
-  setTimeout(() => {
-    drawFour.style.visibility = "hidden"
-    drawFourContainer.style.zIndex = "-4";
-    drawFour.style.opacity = 1;
-  }, "1950"); drawFour
-
-}
-
-/**
- * Displays and animates the draw two symbol
- */
-function animateDrawTwo(card_color) {
-  let drawTwo = document.getElementById("plusTwo");
-  let drawTwoContainer = document.getElementById("plusTwoContainer");
-  drawTwo.style.filter= colorMap[card_color];
-  drawTwo.style.visibility = "visible"
-  drawTwoContainer.style.animationName = "bounce";
-  drawTwoContainer.style.zIndex = "4";
-  setTimeout(() => {
-    drawTwo.style.opacity = 0;
-    drawTwoContainer.style.animationName = "";
-  }, "1000");
-  setTimeout(() => {
-    drawTwo.style.visibility = "hidden"
-    drawTwoContainer.style.zIndex = "-4";
-    drawTwo.style.opacity = 1;
-  }, "1950");
-
-}
 
 //Button on end game screen return to lobby
 const returnLobby = document.querySelectorAll('.lobby-button');
@@ -685,31 +806,31 @@ function eventAlert(discardPile) {
   alertIndicator.style.textAlign = "center";
   alertIndicator.style.width = alertIndicator.innerText.width + "px";
 
-  if(eventAction === "WILD_CARD" || eventAction === "DRAW_FOUR"){
+  if (eventAction === "WILD_CARD" || eventAction === "DRAW_FOUR") {
     alertIndicator.innerText = "COLOR CHANGE";
-    setTimeout(function() {
+    setTimeout(function () {
     }, 500);
-    setTimeout(function() {
+    setTimeout(function () {
       alertIndicator.style.display = "none";
     }, 1000);
-  } else if(eventAction === "REVERSE"){
+  } else if (eventAction === "REVERSE") {
     alertIndicator.innerText = "REVERSE";
-    setTimeout(function() {
+    setTimeout(function () {
     }, 500);
-    setTimeout(function() {
+    setTimeout(function () {
       alertIndicator.style.display = "none";
     }, 1000);
-  } else if(eventAction === "SKIP"){
+  } else if (eventAction === "SKIP") {
     alertIndicator.innerText = "TURN SKIPPED";
-    setTimeout(function() {
+    setTimeout(function () {
     }, 500);
-    setTimeout(function() {
+    setTimeout(function () {
       alertIndicator.style.display = "none";
     }, 1000);
   } else {
     alertIndicator.innerText = "";
   }
 
-  
+
 
 }
