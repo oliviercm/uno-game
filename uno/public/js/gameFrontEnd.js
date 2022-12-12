@@ -190,6 +190,7 @@ socket.on("game_state", (gameState) => {
 
   //display unoButton if user has two cards and it is their turn
   if (handElement.childElementCount === 2 && currentUserInGameState.play_order === 0) {
+    console.log("Displaying button");
     displayUnoButton();
   }
 
@@ -432,13 +433,6 @@ function calculateOverlap(numCards, isOwnHand) {
   }
   let fullOverlapValue = (visualVars.cardSize * numCards) - containerSize;
   let overlapPerCard = ((fullOverlapValue / numCards) * -1) - (30 - numCards);
-
-  console.log("ContainerSize: " + visualVars.opponentContainerSize);
-  console.log("CardSize: " + visualVars.cardSize);
-  console.log("NumCards: " + numCards);
-  console.log("FullOverlap: " + fullOverlapValue);
-  console.log("OverlapPerCard: " + overlapPerCard);
-
   //at least overlap a little bit
   if (overlapPerCard > -15) {
     return -15;
@@ -570,6 +564,7 @@ function displayTurnBorder(turnHandKey) {
  */
 function displayUnoButton() {
   unoButtonContainer.style.visibility = "visible";
+  unoButtonContainer.style.opacity = "1";
 }
 
 /**
@@ -586,7 +581,6 @@ function postSaidUno() {
   };
   fetch(query, request);
 
-  //hides unoButton
   console.log(unoButtonContainer);
   unoButtonContainer.style.opacity = "0";
   setTimeout(() => {
