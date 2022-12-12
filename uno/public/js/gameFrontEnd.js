@@ -356,6 +356,7 @@ function displayOwnCard(card, isNewCard) {
     'url(' + CARD_FILE[card.color][card.value] + ')';
 
   if (isNewCard) {
+    unoButtonContainer.style.visibility = "hidden";
     newCard.animate([
       { transform: 'translateY(-100%) scale(1)' },
       { transform: 'translateY(0%) scale(1)' }
@@ -569,9 +570,6 @@ function displayTurnBorder(turnHandKey) {
  */
 function displayUnoButton() {
   unoButtonContainer.style.visibility = "visible";
-  setTimeout(() => {
-    unoButtonContainer.style.visibility = "hidden";
-  }, "5000")
 }
 
 /**
