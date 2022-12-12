@@ -108,6 +108,11 @@ fetch('/api/users/current').then((response) => {
 });
 
 let playerMap = new Map();
+let opponentCalledUno = {
+  leftOpponent: false,
+  topOpponent: false,
+  rightOpponent: false
+}
 let numDisplayedUserCards = 0;
 
 let discardPileDegree = [];
@@ -183,8 +188,8 @@ socket.on("game_state", (gameState) => {
 
   document.querySelector(':root').style.setProperty("--myHandOverlap", calculateOverlap(handElement.childElementCount, true) + "px");
 
-  //display unoButton if user only has one card
-  if (handElement.childElementCount === 1) {
+  //display unoButton if user has two cards and it is their turn
+  if (handElement.childElementCount === 2 && currentUserInGameState.play_order === 0) {
     displayUnoButton();
   }
 
@@ -303,6 +308,7 @@ socket.on('game_event', (gameEvent) => {
     case "CALLED_UNO":
       if (gameEvent.user_id !== currentUser.user_id) {
         displayOpponentCalledUno(gameEvent.user_id);
+        opponentCalledUno[playerMap.get(gameEvent.user_id)] = true;
         youDidNotSayUnoButtonContainer.style.visibility = "hidden";
       }
       break;
@@ -391,6 +397,7 @@ function displayOpponentCards(user_id, opponentKey, amount) {
   const cardsAlreadyInOpponentsHand = opponentHandElement.childElementCount;
   // Based on how many cards are already displayed and how many should be displayed, add or remove cards as necessary
   if (cardsAlreadyInOpponentsHand < amount) {
+    opponentCalledUno[opponentKey] = false;
     for (let i = 0; i < amount - cardsAlreadyInOpponentsHand; i++) {
       const newCard = document.createElement('div');
       const sizeControllerImg = document.createElement('img');
@@ -405,8 +412,7 @@ function displayOpponentCards(user_id, opponentKey, amount) {
     }
 
     //lost cards, if cards is now 1 check for uno
-    if (opponentHandElement.childElementCount === 1) {
-      console.log("Showing Button");
+    if (opponentHandElement.childElementCount === 1 && !opponentCalledUno[opponentKey]) {
       displayYouDidntSayUnoButton(user_id);
     }
   }
